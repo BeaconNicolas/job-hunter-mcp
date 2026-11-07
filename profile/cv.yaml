@@ -1,0 +1,208 @@
+# Master CV: the single source of truth for job matching and CV tailoring.
+#
+# Rules for anything that reads this file (people and tools):
+# - Tailoring may choose, reorder and reword these facts. It must never add a
+#   skill, tool, employer, date, number or achievement that is not written here.
+# - To claim something new, add it here first.
+#
+# `tags` on bullets and projects are the keywords used to match job descriptions.
+# `include: false` keeps an item out of the default CV; tailoring can still use it.
+
+basics:
+  name: Beacon Nicolas Mkhabele
+  headline: Platform Engineer | AWS, Terraform, CI/CD
+  location: Pretoria, Gauteng, South Africa
+  email: nickbeacon28988@gmail.com
+  phone: +27 68 493 3190
+  links:
+    - label: LinkedIn
+      url: https://www.linkedin.com/in/beacon-mkhabele-b47b62201
+    - label: GitHub
+      url: https://github.com/BeaconNicolas
+    - label: Portfolio
+      url: https://beaconnicolas.github.io/pushing/
+
+summary: >-
+  Platform engineer with nearly three years at BMW IT Hub South Africa, where I
+  grew from junior data scientist to owning a production AWS pipeline that solves
+  mixed-integer linear programming (MILP) models. I design multi-account AWS
+  platforms with Terraform, build CI/CD pipelines that deploy across Development,
+  Integration and Production, and keep data science workloads running reliably.
+  My BSc in Applied Mathematics and Mathematical Statistics lets me work closely
+  with data science teams and the platforms they depend on.
+
+skills:
+  - group: Cloud (AWS)
+    items: [Lambda, Glue, S3, ECR, IAM and cross-account roles, CodePipeline, CodeBuild, EventBridge, Cloud9, Multi-account architecture]
+  - group: Infrastructure as code and DevOps
+    items: [Terraform, CI/CD pipelines, GitHub Actions, Docker, Git, Linux (Ubuntu, WSL)]
+  - group: Programming
+    items: [Python, SQL, Angular]
+  - group: Data science and optimisation
+    items: [Mixed-integer linear programming (MILP), pandas, NumPy, SciPy, Statistics and hypothesis testing, R (regression)]
+  - group: Machine learning
+    items: [scikit-learn, XGBoost, TensorFlow, Keras, Regression and classification, K-Means, PCA, Feature engineering]
+  - group: Data and visualisation
+    items: [MongoDB, Tableau, Matplotlib, Seaborn, Excel automation]
+
+experience:
+  - org: BMW IT Hub South Africa
+    location: Pretoria
+    start: 2024-01
+    end: present
+    roles:
+      - title: Platform Engineer
+        start: 2026-10
+        end: present
+        bullets:
+          - text: Own and maintain a complex, multi-step AWS data science pipeline that solves mixed-integer linear programming (MILP) models.
+            tags: [aws, ownership, production, milp, python, data-science, platform]
+          - text: Translate the pipeline's existing AWS resources, originally built without Terraform, into Terraform infrastructure as code.
+            tags: [terraform, iac, aws, migration]
+          - text: Set up CI/CD pipelines that deploy the pipeline across Development, Integration and Production environments.
+            tags: [ci-cd, multi-environment, devops, aws]
+          - text: Engineer algorithmic and architectural optimisations within the pipeline to improve its performance.
+            tags: [performance, architecture, optimisation, python]
+          - text: Deliver daily enhancements and bug fixes to highly technical, mathematical Python workflows.
+            tags: [python, support, maintenance, mathematics]
+      - title: AWS Developer Consultant
+        start: 2025-10
+        end: 2026-09
+        bullets:
+          - text: Fixed broken AWS CI/CD pipelines, restoring deployments.
+            tags: [ci-cd, aws, troubleshooting, devops]
+          - text: Designed a multi-account AWS architecture (Dev, INT, Prod, Tooling) and enabled cross-account deployments with IAM roles.
+            tags: [aws, multi-account, iam, architecture, security]
+          - text: Built Terraform-based infrastructure and populated new AWS environments from scratch.
+            tags: [terraform, iac, aws]
+          - text: Developed AWS Glue ETL jobs and workflows, and configured Lambda, S3 and the triggers that connect them.
+            tags: [aws-glue, etl, lambda, s3, data-engineering, serverless]
+          - text: Built CI/CD pipelines with Docker, ECR and Terraform.
+            tags: [ci-cd, docker, ecr, terraform, containers]
+      - title: DevOps Developer Consultant
+        start: 2025-01
+        end: 2025-10
+        bullets:
+          - text: Maintained and supported AWS cloud operations to keep data delivery smooth and reliable.
+            tags: [aws, operations, reliability, support]
+          - text: Built and managed infrastructure with Terraform and set up CI/CD pipelines to streamline deployments.
+            tags: [terraform, iac, ci-cd, devops]
+          - text: Developed frontend features in Angular and backend logic in Python on AWS Cloud9.
+            tags: [angular, python, full-stack, cloud9]
+          - text: Maintained AWS Lambda functions packaged and deployed as Docker images.
+            tags: [lambda, docker, serverless, containers]
+          - text: Helped secure AWS resources by finding and fixing potential vulnerabilities.
+            tags: [security, aws, vulnerability-remediation]
+      - title: Junior Data Scientist
+        start: 2024-01
+        end: 2025-01
+        bullets:
+          - text: Automated Excel workflows with Python.
+            tags: [python, automation, excel]
+          - text: Cleaned, transformed and compared data.
+            tags: [data-cleaning, pandas, data-analysis]
+          - text: Gained hands-on AWS cloud experience and took part in hackathons.
+            tags: [aws, hackathons]
+
+  - org: 2U
+    location: Cape Town
+    start: 2023-09
+    end: 2025-03
+    roles:
+      - title: Instructional Specialist, Machine Learning and AI, and Data Analytics boot camps
+        start: 2023-09
+        end: 2025-03
+        bullets:
+          - text: Mentored students on the Machine Learning and Artificial Intelligence boot camp, covering Python, machine learning, deep learning, TensorFlow, data science and natural language processing.
+            tags: [machine-learning, python, tensorflow, nlp, mentoring, teaching]
+          - text: Taught and mentored students on the Data Analytics boot camp, covering Python (NumPy, SciPy, pandas, Matplotlib), web visualisation and Tableau.
+            tags: [data-analytics, python, pandas, tableau, teaching]
+          - text: Helped students with coursework, gave feedback, graded assignments and supported them throughout the programmes.
+            tags: [mentoring, communication, assessment]
+
+  - org: Rhodes University
+    location: Makhanda
+    start: 2022-03
+    end: 2022-11
+    include: false
+    roles:
+      - title: Statistics for Commerce Tutor
+        start: 2022-08
+        end: 2022-11
+        bullets:
+          - text: Explained concepts to students and marked their scripts and tutorials.
+            tags: [statistics, teaching]
+      - title: Mathematics for Science Tutor
+        start: 2022-03
+        end: 2022-06
+        bullets:
+          - text: Explained concepts to students and marked their scripts and tutorials.
+            tags: [mathematics, teaching]
+
+  - org: Inkululeko
+    location: Makhanda
+    start: 2022-09
+    end: 2022-11
+    include: false
+    roles:
+      - title: Mathematics Tutor
+        start: 2022-09
+        end: 2022-11
+        bullets:
+          - text: Taught lessons to learners and marked their scripts.
+            tags: [mathematics, teaching]
+
+projects:
+  - name: Terraform CI/CD on AWS (personal project)
+    year: "2026"
+    url: https://github.com/BeaconNicolas/terraform-cicd-aws
+    tags: [terraform, aws, ci-cd, codepipeline, codebuild, github-actions, oidc, iam, security, docker, ecr, testing]
+    bullets:
+      - A merge to dev, int or prod signs in to AWS with GitHub OIDC (no stored keys) and starts that environment's CodePipeline V2 through S3 and EventBridge, with test, plan, manual approval and apply stages.
+      - Least-privilege IAM with confused-deputy conditions, per-environment deployer roles without delete permissions, a destroy guard on every plan and S3-native state locking.
+      - Offline terraform test suites with mock providers, a pinned and checksum-verified tools image, and a design that stays inside the AWS free tier.
+
+  - name: Lending Club credit policy classification
+    year: "2023"
+    url: https://github.com/BeaconNicolas/Data_Science
+    tags: [machine-learning, classification, python, scikit-learn, tensorflow, keras, statistics]
+    bullets:
+      - Classified whether borrowers meet Lending Club's credit-underwriting criteria from 9,578 loan records, screening features with t-tests, chi-square tests and VIF.
+      - Compared logistic regression (91% test accuracy) with a GridSearchCV-tuned random forest (99%), and built a Keras/TensorFlow network with early stopping.
+
+  - name: NYC 311 customer service requests
+    year: "2023"
+    url: https://github.com/BeaconNicolas/Data_Science
+    include: false
+    tags: [data-analysis, python, pandas, scipy, statistics, data-cleaning]
+    bullets:
+      - Cleaned and analysed 364,558 public service requests, engineered a closing-time feature, and used ANOVA and chi-square tests to compare response times across complaint types and locations.
+
+  - name: Greener manufacturing feature preparation
+    year: "2023"
+    url: https://github.com/BeaconNicolas/Data_Science
+    include: false
+    tags: [machine-learning, feature-engineering, pca, xgboost, python]
+    bullets:
+      - Prepared about 380 anonymised car-configuration features to predict test-bench time, using label encoding, standardisation and PCA, and set up XGBoost and linear regression models.
+
+education:
+  - title: BSc in Applied Mathematics and Mathematical Statistics
+    org: Rhodes University
+    period: 2020 - 2022
+  - title: BSc in Mathematical Science
+    org: University of the Free State
+    period: 2018 - 2019
+  - title: Data and AI Master's Program
+    org: Deviare
+    period: May 2023 - Jan 2024
+    note: Six hands-on projects in Python, machine learning and deep learning (credential Dev-508-86).
+
+certifications:
+  - title: AWS Certified Cloud Practitioner
+    org: Amazon Web Services
+  - title: "HashiCorp Certified: Terraform Associate (003)"
+    org: HashiCorp
+  - title: Deep Learning with TensorFlow
+  - title: Introduction to Regression in R; Intermediate Regression in R
+  - title: MongoDB for SQL Pros

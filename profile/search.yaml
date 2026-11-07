@@ -1,0 +1,59 @@
+# What to search for and how strict the daily alert is.
+# Matching uses the skills and experience in cv.yaml; this file only steers the search.
+
+# A job whose title contains one of these scores higher.
+target_titles:
+  - platform engineer
+  - devops engineer
+  - devops
+  - cloud engineer
+  - aws engineer
+  - aws developer
+  - cloud developer
+  - site reliability engineer
+  - sre
+  - infrastructure engineer
+  - mlops engineer
+  - data engineer
+
+# Jobs whose title contains any of these are skipped.
+exclude_title_words:
+  - principal
+  - director
+  - head of
+  - vice president
+  - intern
+  - internship
+
+# Roughly how many years of relevant experience you have. Jobs asking for much
+# more are still shown, but score lower and are flagged.
+experience_years: 3
+
+min_score: 55   # 0-100: below this, a job is not sent to WhatsApp
+max_alerts: 5   # most jobs per daily WhatsApp message
+
+# Adzuna: jobs in South Africa. Needs a free API key (README).
+adzuna:
+  country: za
+  where: ""          # e.g. "Gauteng" to narrow it; empty means all of South Africa
+  max_days_old: 3
+  queries:
+    - platform engineer
+    - devops engineer
+    - cloud engineer aws
+    - terraform
+
+# Remotive: remote jobs. No key needed. Remotive asks for only a few requests a
+# day, so the daily alert makes one request per category and search below.
+remotive:
+  categories:
+    - devops
+  searches: []
+  # Keep jobs whose "candidate location" mentions one of these.
+  allowed_locations:
+    - worldwide
+    - anywhere
+    - global
+    - africa
+    - south africa
+    - emea

@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Generated CVs and alert state stay on your machine or in the Actions cache.
+output/
+state/
+
+# Local secrets
+.env
