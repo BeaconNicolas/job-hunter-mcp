@@ -41,21 +41,29 @@ def collect(
                 "Adzuna skipped: set ADZUNA_APP_ID and ADZUNA_APP_KEY to search South African jobs."
             )
         else:
-            for q in [query] if query else settings.adzuna_queries:
+            if query:
+                searches = [(f"'{query}'", {"query": query})]
+            else:
+                searches = [
+                    (f"any of '{' '.join(settings.adzuna_any_of)}'", {"any_of": settings.adzuna_any_of})
+                ]
+                searches = searches if settings.adzuna_any_of else []
+                searches += [(f"'{q}'", {"query": q}) for q in settings.adzuna_queries]
+            for label, terms in searches:
                 try:
                     found = adzuna.search(
                         client,
                         app_id=app_id,
                         app_key=app_key,
-                        query=q,
                         country=settings.adzuna_country,
                         where=settings.adzuna_where,
                         max_days_old=settings.adzuna_max_days_old,
+                        **terms,
                     )
-                    log(f"Adzuna '{q}': {len(found)} jobs")
+                    log(f"Adzuna {label}: {len(found)} jobs")
                     out.jobs += found
                 except httpx.HTTPError as exc:
-                    out.errors.append(f"Adzuna '{q}': {exc}")
+                    out.errors.append(f"Adzuna {label}: {describe_error(exc, 'Adzuna')}")
 
     if where in ("remote", "both"):
         calls = (
@@ -76,10 +84,23 @@ def collect(
                 log(f"Remotive {kind} '{value}': {len(found)} jobs open to your location")
                 out.jobs += found
             except httpx.HTTPError as exc:
-                out.errors.append(f"Remotive {kind} '{value}': {exc}")
+                out.errors.append(f"Remotive {kind} '{value}': {describe_error(exc, 'Remotive')}")
 
     out.jobs = dedupe(out.jobs)
     return out
+
+
+def describe_error(exc: httpx.HTTPError, source: str) -> str:
+    """A short, safe description: never the request URL, which can contain API keys."""
+    if isinstance(exc, httpx.HTTPStatusError):
+        status = exc.response.status_code
+        hint = {
+            401: f"check the {source} key and ID",
+            403: f"{source} refused the request: check the key, or the plan's call limit may be used up",
+            429: f"{source} call limit reached",
+        }.get(status, "")
+        return f"HTTP {status}" + (f" ({hint})" if hint else "")
+    return f"{type(exc).__name__} (network problem or timeout)"
 
 
 def rank(jobs: list[Job], have: set[str], settings: SearchSettings) -> list[tuple[Job, Match]]:

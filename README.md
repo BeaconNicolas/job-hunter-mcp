@@ -2,7 +2,7 @@
 
 My job search assistant. It does three things:
 
-1. **Finds jobs that fit my CV**: South African jobs from [Adzuna](https://www.adzuna.co.za)
+1. **Finds jobs that fit my CV**: South African jobs from [Adzuna](https://www.adzuna.co.za) (needs an API key; see setup)
    and remote jobs open to South Africa from [Remotive](https://remotive.com).
    Each job gets a 0–100 score with the skills it wants that my CV has, and the ones it lacks.
 2. **Tailors my CV to a job** in Claude Desktop and saves it as a Word file. It
@@ -106,10 +106,17 @@ Things to ask Claude once it is connected:
 Tailored CVs are saved in `output/tailored/` inside the repository folder, with a
 `.yaml` record of exactly what changed. `output/` is ignored by git.
 
-### 2. Adzuna API key (free)
+### 2. Adzuna API key (South African jobs)
 
-1. Register at [developer.adzuna.com](https://developer.adzuna.com/) and create an application.
-2. Copy the **Application ID** and **Application key**.
+1. Register at [developer.adzuna.com](https://developer.adzuna.com/) (use: *Personal job search*)
+   and click the activation link in the email.
+2. Copy the **Application ID** and **Application key** from **Dashboard → API Access Details**.
+
+**Cost:** without a card, Adzuna gives **25 test calls in total**. Full access is £8 a month
+(5,000 calls a month, 500 a day). To make the test calls last, the default search is one call
+per run (`any_of` in `profile/search.yaml`), and each `search_jobs` call in Claude uses one.
+When the calls run out, Adzuna answers with an error, and the alert reports it and carries on
+with Remotive.
 
 Without a key, the tools still search Remotive (remote jobs) and say that Adzuna was skipped.
 
@@ -164,7 +171,8 @@ every morning at about 06:20 South African time. Each job is sent only once. To 
 list of matches with scores, run `uv run job-hunter-alert --dry-run` on your laptop or ask
 Claude to `search_jobs`.
 
-Costs: GitHub Actions is free for public repositories. Adzuna's and Remotive's APIs are free.
+Costs: GitHub Actions is free for public repositories, and Remotive's API is free. Adzuna
+gives 25 test calls, then costs £8 a month (see step 2).
 
 ## Editing the CV and the search
 
@@ -173,7 +181,8 @@ Costs: GitHub Actions is free for public repositories. Adzuna's and Remotive's A
   help matching. `include: false` hides an item from the default CV while keeping it
   available for tailoring.
 - **`profile/search.yaml`** holds the job titles to favour, titles to skip, the minimum
-  score for WhatsApp, the Adzuna searches and the Remotive categories.
+  score for WhatsApp, the Adzuna searches (each one is an API call per run) and the
+  Remotive categories.
 - Render the master CV to Word: `uv run job-hunter-render profile/cv.yaml output/CV.docx`.
 
 ## How matching works

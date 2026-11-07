@@ -32,16 +32,15 @@ experience_years: 3
 min_score: 55   # 0-100: below this, a job is not sent to WhatsApp
 max_alerts: 5   # most jobs per daily WhatsApp message
 
-# Adzuna: jobs in South Africa. Needs a free API key (README).
+# Adzuna: jobs in South Africa. Needs an API key (README). Every search below is one
+# API call per run. Without a paid plan Adzuna allows only 25 calls in total, so the
+# default is a single call that matches any of the words in any_of.
 adzuna:
   country: za
   where: ""          # e.g. "Gauteng" to narrow it; empty means all of South Africa
   max_days_old: 3
-  queries:
-    - platform engineer
-    - devops engineer
-    - cloud engineer aws
-    - terraform
+  any_of: [devops, terraform, aws, cloud, sre]
+  queries: []        # extra searches where all words must match, e.g. "platform engineer"
 
 # Remotive: remote jobs. No key needed. Remotive asks for only a few requests a
 # day, so the daily alert makes one request per category and search below.

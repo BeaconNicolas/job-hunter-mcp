@@ -1,4 +1,8 @@
-"""Adzuna job search API (covers South Africa). Free key: https://developer.adzuna.com/"""
+"""Adzuna job search API (covers South Africa). Key: https://developer.adzuna.com/
+
+Without a paid plan Adzuna allows only 25 test calls in total, so each search here
+is one call: pass `query` (all words must match) or `any_of` (any word may match).
+"""
 
 from __future__ import annotations
 
@@ -14,7 +18,8 @@ def search(
     *,
     app_id: str,
     app_key: str,
-    query: str,
+    query: str = "",
+    any_of: list[str] | None = None,
     country: str = "za",
     where: str = "",
     max_days_old: int = 3,
@@ -23,12 +28,15 @@ def search(
     params: dict[str, str | int] = {
         "app_id": app_id,
         "app_key": app_key,
-        "what": query,
         "results_per_page": results,
         "max_days_old": max_days_old,
         "sort_by": "date",
         "content-type": "application/json",
     }
+    if any_of:
+        params["what_or"] = " ".join(any_of)
+    else:
+        params["what"] = query
     if where:
         params["where"] = where
     response = client.get(API.format(country=country, page=1), params=params)

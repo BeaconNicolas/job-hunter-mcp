@@ -116,3 +116,30 @@ def test_public_actions_logs_hide_job_details(monkeypatch, isolated, capsys):
     monkeypatch.setenv("ALERT_DETAILS_IN_LOGS", "true")
     assert alert.run(dry_run=True) == 0
     assert "DevOps Engineer" in capsys.readouterr().out
+
+
+def test_adzuna_failure_is_reported_without_the_key(monkeypatch, capsys):
+    """When Adzuna's test calls run out, the alert carries on with Remotive and never
+    prints the request URL (it contains the API key)."""
+    monkeypatch.setenv("ADZUNA_APP_ID", "my-id")
+    monkeypatch.setenv("ADZUNA_APP_KEY", "super-secret-key")
+    real = fake_api(remotive=[remotive_item(7, "DevOps Engineer", GOOD)])
+
+    def factory():
+        client = real()
+        original = client._transport.handle_request
+
+        def handle(request):
+            if request.url.host == "api.adzuna.com":
+                return httpx.Response(403, request=request)
+            return original(request)
+
+        client._transport.handle_request = handle
+        return client
+
+    monkeypatch.setattr(alert, "http_client", factory)
+    assert alert.run(dry_run=True) == 0
+    out = capsys.readouterr().out
+    assert "HTTP 403" in out and "call limit" in out
+    assert "super-secret-key" not in out
+    assert "DevOps Engineer" in out

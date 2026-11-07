@@ -41,3 +41,12 @@ def test_html_to_text_and_dedupe():
     a = adzuna._to_job(adzuna_item("1", "Cloud Engineer", GOOD), "za")
     b = adzuna._to_job(adzuna_item("2", "Cloud Engineer", GOOD), "za")  # same title and company
     assert dedupe([a, a, b]) == [a]
+
+
+def test_adzuna_any_of_is_one_call_with_what_or():
+    calls: list[httpx.Request] = []
+    with fake_api(calls=calls)() as client:
+        adzuna.search(client, app_id="id", app_key="key", any_of=["devops", "terraform"])
+    assert len(calls) == 1
+    assert calls[0].url.params["what_or"] == "devops terraform"
+    assert "what" not in calls[0].url.params

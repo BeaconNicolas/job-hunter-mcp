@@ -43,6 +43,7 @@ class SearchSettings:
     max_alerts: int = 5
     adzuna_country: str = "za"
     adzuna_where: str = ""
+    adzuna_any_of: list[str] = field(default_factory=list)
     adzuna_queries: list[str] = field(default_factory=list)
     adzuna_max_days_old: int = 3
     remotive_categories: list[str] = field(default_factory=list)
@@ -62,6 +63,7 @@ class SearchSettings:
             max_alerts=int(data.get("max_alerts", 5)),
             adzuna_country=adzuna.get("country", "za"),
             adzuna_where=adzuna.get("where", ""),
+            adzuna_any_of=list(adzuna.get("any_of", [])),
             adzuna_queries=list(adzuna.get("queries", [])),
             adzuna_max_days_old=int(adzuna.get("max_days_old", 3)),
             remotive_categories=list(remotive.get("categories", [])),
