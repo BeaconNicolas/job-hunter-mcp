@@ -101,3 +101,18 @@ def test_long_listing_fits_in_a_template_variable():
     ]
     listing = alert.template_listing(jobs)
     assert len(listing) <= 1000 and "more in the GitHub Actions summary" in listing
+
+
+def test_public_actions_logs_hide_job_details(monkeypatch, isolated, capsys):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    summary = isolated / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    use_api(monkeypatch, remotive=[remotive_item(7, "DevOps Engineer", GOOD)])
+    assert alert.run(dry_run=True) == 0
+    out = capsys.readouterr().out
+    assert "DevOps Engineer" not in out and "DevOps Engineer" not in summary.read_text()
+    assert "ALERT_DETAILS_IN_LOGS" in summary.read_text()
+
+    monkeypatch.setenv("ALERT_DETAILS_IN_LOGS", "true")
+    assert alert.run(dry_run=True) == 0
+    assert "DevOps Engineer" in capsys.readouterr().out

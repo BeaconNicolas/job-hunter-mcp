@@ -11,9 +11,11 @@ My job search assistant. It does three things:
 3. **Sends a WhatsApp alert every morning** with the best new matches, from a
    scheduled GitHub Actions workflow.
 
-> **Keep this repository private.** `profile/cv.yaml` holds my phone number and email.
-> API keys and tokens never go in the code: they live in GitHub secrets and in my
-> local Claude Desktop config.
+> **This repository is public on purpose.** `profile/cv.yaml` includes my contact
+> details so employers can reach me. API keys and tokens never go in the code: they
+> live in GitHub secrets and in my local Claude Desktop config. Because Actions logs of a
+> public repository are public too, the daily alert keeps job details out of them and
+> sends them only to WhatsApp.
 
 ## How it fits together
 
@@ -72,7 +74,7 @@ Things to ask Claude once it is connected:
 
 1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (it also installs Python for you).
    Windows PowerShell: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
-2. Clone this private repository. On Windows, [GitHub Desktop](https://desktop.github.com/) is the
+2. Clone this repository. On Windows, [GitHub Desktop](https://desktop.github.com/) is the
    easiest way; or `git clone https://github.com/BeaconNicolas/job-hunter-mcp.git`.
 3. In the repository folder, run `uv sync` once.
 4. Open Claude Desktop → **Settings → Developer → Edit Config**, and add:
@@ -154,13 +156,15 @@ In this repository: **Settings → Secrets and variables → Actions**.
 | `WHATSAPP_TO` | Secret | Your number with country code, digits only: `27…` |
 | `WHATSAPP_TEMPLATE` | Variable | `job_alert` |
 | `WHATSAPP_TEMPLATE_LANG` | Variable | The template's language code, e.g. `en` or `en_US` |
+| `ALERT_DETAILS_IN_LOGS` | Variable | Leave unset. `true` shows job titles and missing skills in the Actions logs, which anyone can read while the repository is public. |
 
-Then **Actions → Daily job alert → Run workflow**, first with **dry run** ticked (it lists
-the matches in the run summary and sends nothing), then without. After that it runs every
-morning at about 06:20 South African time. Each job is sent only once.
+Then **Actions → Daily job alert → Run workflow**, first with **dry run** ticked (it searches
+and reports how many jobs it would send, and sends nothing), then without. After that it runs
+every morning at about 06:20 South African time. Each job is sent only once. To see the full
+list of matches with scores, run `uv run job-hunter-alert --dry-run` on your laptop or ask
+Claude to `search_jobs`.
 
-Costs: GitHub gives private repositories 2,000 free Actions minutes a month; the daily
-alert uses about one minute a run. Adzuna's and Remotive's APIs are free.
+Costs: GitHub Actions is free for public repositories. Adzuna's and Remotive's APIs are free.
 
 ## Editing the CV and the search
 

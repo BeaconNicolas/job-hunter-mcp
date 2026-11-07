@@ -23,7 +23,7 @@ SECRET_VARS = [
 @pytest.fixture(autouse=True)
 def isolated(monkeypatch, tmp_path):
     """No real secrets, and outputs/state in a temporary folder."""
-    for name in SECRET_VARS + ["GITHUB_STEP_SUMMARY"]:
+    for name in SECRET_VARS + ["GITHUB_STEP_SUMMARY", "GITHUB_ACTIONS", "ALERT_DETAILS_IN_LOGS"]:
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("JOB_HUNTER_OUTPUT", str(tmp_path / "output"))
     monkeypatch.setenv("JOB_HUNTER_STATE", str(tmp_path / "state" / "seen.json"))

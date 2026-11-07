@@ -68,10 +68,30 @@ def text_message(top: list[tuple[Job, Match]]) -> str:
     return "\n\n".join(parts)
 
 
+def details_in_logs() -> bool:
+    """Show job titles in logs? Always locally. On GitHub Actions only when the
+    ALERT_DETAILS_IN_LOGS variable is "true": logs of a public repository are public."""
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return True
+    return (os.environ.get("ALERT_DETAILS_IN_LOGS") or "").strip().lower() == "true"
+
+
+HIDDEN_NOTE = (
+    "Job details are hidden here because anyone can read this repository's Actions logs. "
+    "They go to WhatsApp only. To show them, set the repository variable ALERT_DETAILS_IN_LOGS to true."
+)
+
+
 def write_summary(good: list[tuple[Job, Match]], sent: list[tuple[Job, Match]], notes: list[str]) -> None:
-    """Markdown table in the GitHub Actions run summary (private repo only)."""
+    """Counts, notes and (when allowed) a table of matches in the GitHub Actions run summary."""
     target = os.environ.get("GITHUB_STEP_SUMMARY")
     if not target:
+        return
+    if not details_in_logs():
+        body = [f"## Job matches ({len(good)} at or above the minimum score, {len(sent)} sent)", ""]
+        body += [f"> {note}" for note in notes + [HIDDEN_NOTE]]
+        with open(target, "a", encoding="utf-8") as handle:
+            handle.write("\n".join(body) + "\n")
         return
     sent_ids = {job.id for job, _ in sent}
     rows = [
@@ -135,7 +155,10 @@ def run(dry_run: bool = False, today: date | None = None) -> int:
             return 0
 
         if dry_run or cfg is None:
-            print("\n" + text_message(top))
+            if details_in_logs():
+                print("\n" + text_message(top))
+            else:
+                print(f"{len(top)} job(s) would be sent. {HIDDEN_NOTE}")
             write_summary(good, [], notes + (["Dry run: nothing was sent."] if dry_run else []))
             return 0
 

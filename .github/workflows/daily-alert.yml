@@ -1,6 +1,6 @@
 # Every morning: search for jobs, rank them against profile/cv.yaml and send the
 # best new matches to WhatsApp. Run it by hand from the Actions tab too
-# (tick "dry run" to see the matches without sending anything).
+# (tick "dry run" to test the search without sending anything).
 name: Daily job alert
 
 on:
@@ -53,6 +53,9 @@ jobs:
           WHATSAPP_TO: ${{ secrets.WHATSAPP_TO }}
           WHATSAPP_TEMPLATE: ${{ vars.WHATSAPP_TEMPLATE }}
           WHATSAPP_TEMPLATE_LANG: ${{ vars.WHATSAPP_TEMPLATE_LANG }}
+          # Logs of a public repository are public: job details only go to WhatsApp
+          # unless this variable is "true".
+          ALERT_DETAILS_IN_LOGS: ${{ vars.ALERT_DETAILS_IN_LOGS }}
         run: |
           args=()
           if [ "${DRY_RUN}" = "true" ]; then args+=(--dry-run); fi
