@@ -91,7 +91,12 @@ def write_summary(good: list[tuple[Job, Match]], sent: list[tuple[Job, Match]], 
 
 
 # ----------------------------------------------------------------- main
-def run(dry_run: bool = False, today: date | None = None) -> int:
+PREVIEW_SIZE = 10
+
+
+def run(dry_run: bool = False, preview: bool = False, today: date | None = None) -> int:
+    """preview: send the 10 best-scoring jobs, whatever their score, without marking
+    them as sent. For checking how the scoring treats real adverts."""
     today = today or date.today()
     settings = config.SearchSettings.load()
     have = cv_terms(config.load_cv())
@@ -118,6 +123,21 @@ def run(dry_run: bool = False, today: date | None = None) -> int:
         notes = list(collected.notes)
         if not channels:
             notes.append(f"No phone channel configured. {notify.SETUP_HINT}")
+
+        if preview:
+            sample = ranked[:PREVIEW_SIZE]
+            heading = (
+                f"Preview: the {len(sample)} best-scoring jobs today (alerts start at {settings.min_score})"
+            )
+            if not sample or not channels:
+                reason = "Nothing to preview." if not sample else "No phone channel configured."
+                print(f"{reason} {notify.SETUP_HINT}" if sample else reason)
+                return 0
+            delivery = notify.send_jobs(client, sample, heading=heading)
+            for error in delivery.errors:
+                print(f"Sending failed: {error}")
+            print(f"Preview of {len(sample)} job(s) sent; nothing marked as sent." if delivery.sent else "")
+            return 0 if delivery.sent else 1
 
         if not top:
             print("No new matches to send today.")
@@ -151,8 +171,13 @@ def run(dry_run: bool = False, today: date | None = None) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true", help="print the matches; send and remember nothing")
+    parser.add_argument(
+        "--preview",
+        action="store_true",
+        help="send the 10 best-scoring jobs, whatever their score; remember nothing",
+    )
     args = parser.parse_args(argv)
-    return run(dry_run=args.dry_run)
+    return run(dry_run=args.dry_run, preview=args.preview)
 
 
 if __name__ == "__main__":

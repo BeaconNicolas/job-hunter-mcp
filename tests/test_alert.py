@@ -204,3 +204,19 @@ def test_jooble_jobs_reach_the_alert_and_its_key_stays_hidden(monkeypatch, capsy
     sent = body([r for r in calls if r.url.host == "api.telegram.org"][0])["text"]
     assert "Example Bank" in sent
     assert "jooble-secret" not in capsys.readouterr().out
+
+
+def test_preview_sends_low_scores_and_remembers_nothing(monkeypatch):
+    telegram_env(monkeypatch)
+    calls: list[httpx.Request] = []
+    jobs = [remotive_item(7, "DevOps Engineer", GOOD), remotive_item(8, "Java Developer", BAD)]
+    use_api(monkeypatch, remotive=jobs, calls=calls)
+    assert alert.run(preview=True) == 0
+    text = body([r for r in calls if r.url.host == "api.telegram.org"][0])["text"]
+    assert "Preview" in text and "Java Developer" in text and "via remotive" in text
+
+    # The real alert afterwards still sends the good job: the preview marked nothing as sent.
+    calls.clear()
+    assert alert.run() == 0
+    text = body([r for r in calls if r.url.host == "api.telegram.org"][0])["text"]
+    assert "DevOps Engineer" in text and "Java Developer" not in text

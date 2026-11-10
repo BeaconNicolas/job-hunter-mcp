@@ -59,9 +59,9 @@ def template_listing(top: list[tuple[Job, Match]]) -> str:
     return " ".join(lines)
 
 
-def plain_message(top: list[tuple[Job, Match]]) -> str:
+def plain_message(top: list[tuple[Job, Match]], heading: str | None = None) -> str:
     """WhatsApp-style text (*bold*), also used for previews in the terminal."""
-    parts = [f"*{_plural(len(top))}*"]
+    parts = [f"*{heading or _plural(len(top))}*"]
     for n, (job, match) in enumerate(top, start=1):
         details = " · ".join(x for x in (job.location, f"{match.score}% match", job.salary) if x)
         parts.append(f"{n}. *{job.title}* - {job.company}\n{details}\n{job.url}")
@@ -69,12 +69,13 @@ def plain_message(top: list[tuple[Job, Match]]) -> str:
     return "\n\n".join(parts)
 
 
-def telegram_message(top: list[tuple[Job, Match]]) -> str:
+def telegram_message(top: list[tuple[Job, Match]], heading: str | None = None) -> str:
     """Telegram HTML: bold titles and a tappable link per job."""
     e = html.escape
-    parts = [f"<b>{_plural(len(top))}</b>"]
+    parts = [f"<b>{e(heading or _plural(len(top)))}</b>"]
     for n, (job, match) in enumerate(top, start=1):
-        details = " · ".join(e(x) for x in (job.location, f"{match.score}% match", job.salary) if x)
+        fields = (job.location, f"{match.score}% match", job.salary, f"via {job.source}" if heading else "")
+        details = " · ".join(e(x) for x in fields if x)
         link = f'<a href="{e(job.url, quote=True)}">Open the advert</a>' if job.url else ""
         missing = f"\nMissing: {e(', '.join(match.missing[:5]))}" if match.missing else ""
         parts.append(f"{n}. <b>{e(job.title)}</b> - {e(job.company)}\n{details}{missing}\n{link}".rstrip())
@@ -83,16 +84,18 @@ def telegram_message(top: list[tuple[Job, Match]]) -> str:
 
 
 # ----------------------------------------------------------------- sending
-def send_jobs(client: httpx.Client, top: list[tuple[Job, Match]]) -> Delivery:
+def send_jobs(client: httpx.Client, top: list[tuple[Job, Match]], heading: str | None = None) -> Delivery:
+    """Send jobs to every channel. With a heading (previews), WhatsApp is skipped: its
+    approved template only fits the normal alert."""
     result = Delivery()
     tg = TelegramConfig.from_env()
     if tg:
         try:
-            telegram_send(client, tg, telegram_message(top), html=True)
+            telegram_send(client, tg, telegram_message(top, heading), html=True)
             result.sent.append("Telegram")
         except TelegramError as exc:
             result.errors.append(f"Telegram: {exc}")
-    wa = WhatsAppConfig.from_env()
+    wa = None if heading else WhatsAppConfig.from_env()
     if wa:
         try:
             if wa.template:

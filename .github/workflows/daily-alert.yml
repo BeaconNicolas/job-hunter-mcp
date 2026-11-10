@@ -12,6 +12,10 @@ on:
         description: Search and list the matches, but send nothing
         type: boolean
         default: false
+      preview:
+        description: Send the 10 best-scoring jobs whatever their score (for tuning); remember nothing
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -46,6 +50,7 @@ jobs:
       - name: Search, rank and send
         env:
           DRY_RUN: ${{ inputs.dry_run }}
+          PREVIEW: ${{ inputs.preview }}
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
           JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
@@ -62,6 +67,7 @@ jobs:
         run: |
           args=()
           if [ "${DRY_RUN}" = "true" ]; then args+=(--dry-run); fi
+          if [ "${PREVIEW}" = "true" ]; then args+=(--preview); fi
           uv run --frozen job-hunter-alert "${args[@]}"
 
       - name: Save the list of jobs already sent
