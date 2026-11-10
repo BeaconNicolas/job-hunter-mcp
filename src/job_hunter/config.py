@@ -46,6 +46,9 @@ class SearchSettings:
     adzuna_any_of: list[str] = field(default_factory=list)
     adzuna_queries: list[str] = field(default_factory=list)
     adzuna_max_days_old: int = 3
+    jooble_keywords: list[str] = field(default_factory=list)
+    jooble_location: str = "South Africa"
+    jooble_host: str = "jooble.org"
     remotive_categories: list[str] = field(default_factory=list)
     remotive_searches: list[str] = field(default_factory=list)
     remotive_allowed_locations: list[str] = field(default_factory=list)
@@ -54,6 +57,7 @@ class SearchSettings:
     def load(cls, path: Path | None = None) -> SearchSettings:
         data = load_yaml(path or profile_dir() / "search.yaml")
         adzuna = data.get("adzuna", {})
+        jooble = data.get("jooble", {})
         remotive = data.get("remotive", {})
         return cls(
             target_titles=[t.lower() for t in data.get("target_titles", [])],
@@ -65,6 +69,9 @@ class SearchSettings:
             adzuna_where=adzuna.get("where", ""),
             adzuna_any_of=list(adzuna.get("any_of", [])),
             adzuna_queries=list(adzuna.get("queries", [])),
+            jooble_keywords=list(jooble.get("keywords", [])),
+            jooble_location=jooble.get("location", "South Africa"),
+            jooble_host=jooble.get("host", "jooble.org"),
             adzuna_max_days_old=int(adzuna.get("max_days_old", 3)),
             remotive_categories=list(remotive.get("categories", [])),
             remotive_searches=list(remotive.get("searches", [])),

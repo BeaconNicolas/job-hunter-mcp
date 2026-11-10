@@ -191,3 +191,16 @@ def test_telegram_errors_never_show_the_token(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "pressed Start" in out
     assert "secret-token" not in out
+
+
+def test_jooble_jobs_reach_the_alert_and_its_key_stays_hidden(monkeypatch, capsys):
+    from .test_sources import jooble_item
+
+    telegram_env(monkeypatch)
+    monkeypatch.setenv("JOOBLE_API_KEY", "jooble-secret")
+    calls: list[httpx.Request] = []
+    use_api(monkeypatch, jooble=[jooble_item(5, "DevOps Engineer", GOOD)], calls=calls)
+    assert alert.run() == 0
+    sent = body([r for r in calls if r.url.host == "api.telegram.org"][0])["text"]
+    assert "Example Bank" in sent
+    assert "jooble-secret" not in capsys.readouterr().out

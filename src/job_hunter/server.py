@@ -55,7 +55,7 @@ def search_jobs(
     where: Literal["south_africa", "remote", "both"] = "both",
     limit: int = 10,
 ) -> dict[str, Any]:
-    """Search South African jobs (Adzuna) and remote jobs open to South Africa (Remotive),
+    """Search South African jobs (Jooble, Adzuna) and remote jobs open to South Africa (Remotive),
     ranked by how well they fit the CV. Leave query empty to use the saved searches
     in profile/search.yaml. Each result has a 0-100 score, matched and missing skills."""
     settings = config.SearchSettings.load()

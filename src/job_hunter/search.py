@@ -11,7 +11,7 @@ import httpx
 from job_hunter.config import SearchSettings, env
 from job_hunter.jobs import Job, dedupe
 from job_hunter.matching import Match, excluded, score_job
-from job_hunter.sources import adzuna, remotive
+from job_hunter.sources import adzuna, jooble, remotive
 
 Where = Literal["south_africa", "remote", "both"]
 
@@ -64,6 +64,25 @@ def collect(
                     out.jobs += found
                 except httpx.HTTPError as exc:
                     out.errors.append(f"Adzuna {label}: {describe_error(exc, 'Adzuna')}")
+
+    if where in ("south_africa", "both"):
+        jooble_key = env("JOOBLE_API_KEY")
+        if not jooble_key:
+            out.notes.append("Jooble skipped: set JOOBLE_API_KEY to search more South African jobs.")
+        else:
+            for keywords in [query] if query else settings.jooble_keywords:
+                try:
+                    found = jooble.search(
+                        client,
+                        api_key=jooble_key,
+                        keywords=keywords,
+                        location=settings.jooble_location,
+                        host=settings.jooble_host,
+                    )
+                    log(f"Jooble '{keywords}': {len(found)} jobs")
+                    out.jobs += found
+                except httpx.HTTPError as exc:
+                    out.errors.append(f"Jooble '{keywords}': {describe_error(exc, 'Jooble')}")
 
     if where in ("remote", "both"):
         calls = (

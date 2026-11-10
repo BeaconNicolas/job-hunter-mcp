@@ -17,6 +17,7 @@ SECRET_VARS = [
     "WHATSAPP_TEMPLATE",
     "WHATSAPP_TEMPLATE_LANG",
     "WHATSAPP_API_VERSION",
+    "JOOBLE_API_KEY",
     "TELEGRAM_BOT_TOKEN",
     "TELEGRAM_CHAT_ID",
 ]
@@ -76,6 +77,7 @@ BAD = "Java and Spring Boot developer for a banking core system, Oracle database
 def fake_api(
     adzuna: list[dict] | None = None,
     remotive: list[dict] | None = None,
+    jooble: list[dict] | None = None,
     whatsapp: Callable[[httpx.Request], httpx.Response] | None = None,
     telegram: Callable[[httpx.Request], httpx.Response] | None = None,
     calls: list[httpx.Request] | None = None,
@@ -88,6 +90,8 @@ def fake_api(
         host = request.url.host
         if host == "api.adzuna.com":
             return httpx.Response(200, json={"results": adzuna or []})
+        if host == "jooble.org":
+            return httpx.Response(200, json={"totalCount": len(jooble or []), "jobs": jooble or []})
         if host == "remotive.com":
             return httpx.Response(200, json={"jobs": remotive or []})
         if host == "api.telegram.org":

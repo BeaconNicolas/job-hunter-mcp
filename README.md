@@ -2,8 +2,9 @@
 
 My job search assistant. It does three things:
 
-1. **Finds jobs that fit my CV**: South African jobs from [Adzuna](https://www.adzuna.co.za) (needs an API key; see setup)
-   and remote jobs open to South Africa from [Remotive](https://remotive.com).
+1. **Finds jobs that fit my CV**: South African jobs from [Jooble](https://jooble.org) and
+   [Adzuna](https://www.adzuna.co.za) (each needs an API key; see setup), and remote jobs open to
+   South Africa from [Remotive](https://remotive.com).
    Each job gets a 0–100 score with the skills it wants that my CV has, and the ones it lacks.
 2. **Tailors my CV to a job** in Claude Desktop and saves it as a Word file. It
    reorders, rewords and highlights what is **already in my CV**, and refuses to add
@@ -57,7 +58,7 @@ flowchart TD
 | Tool | What it does |
 | --- | --- |
 | `get_cv` | The master CV with ids for every bullet (`e1.r2.b3` = job 1, role 2, bullet 3; `p1` = project 1). |
-| `search_jobs` | Searches Adzuna and/or Remotive (saved searches, or your own query) and ranks the results against the CV. |
+| `search_jobs` | Searches Jooble, Adzuna and/or Remotive (saved searches, or your own query) and ranks the results against the CV. |
 | `get_job` | Full details of a job from the last search. |
 | `match_job` | Paste any job description (LinkedIn included): score, skills you have and lack, and your most relevant bullets and projects. |
 | `tailor_cv` | Builds a tailored CV and saves it to `output/tailored/`. Rejects skills, technologies or numbers that are not in your CV. |
@@ -123,6 +124,17 @@ with Remotive.
 
 Without a key, the tools still search Remotive (remote jobs) and say that Adzuna was skipped.
 
+### 2b. Jooble API key (more South African jobs, free on request)
+
+1. Request a key with the form at [jooble.org/api/about](https://jooble.org/api/about). Describe it
+   honestly, e.g. "a personal tool that searches jobs matching my CV and sends me a daily summary".
+2. Jooble emails the key after a review. Save it as the GitHub secret `JOOBLE_API_KEY` (and, for
+   Claude Desktop, in the config's `env`).
+
+Searches are set under `jooble:` in `profile/search.yaml` (each keyword search is one call per
+run). If Jooble's email names a different address for your country, put its host name in
+`jooble.host`.
+
 ### 3. Telegram bot (free; recommended)
 
 1. In Telegram, search for **@BotFather** (the official one has a blue tick) and tap **Start**.
@@ -182,6 +194,7 @@ In this repository: **Settings → Secrets and variables → Actions**.
 | --- | --- | --- |
 | `ADZUNA_APP_ID` | Secret | Adzuna Application ID |
 | `ADZUNA_APP_KEY` | Secret | Adzuna Application key |
+| `JOOBLE_API_KEY` | Secret | Jooble API key |
 | `TELEGRAM_BOT_TOKEN` | Secret | The bot token from @BotFather |
 | `TELEGRAM_CHAT_ID` | Secret | Your chat ID (step 3) |
 | `WHATSAPP_TOKEN` | Secret | Optional: permanent system-user token |

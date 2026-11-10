@@ -42,6 +42,15 @@ adzuna:
   any_of: [devops, terraform, aws, cloud, sre]
   queries: []        # extra searches where all words must match, e.g. "platform engineer"
 
+# Jooble: more South African jobs. Needs a free key (README). One API call per keyword
+# search per run.
+jooble:
+  location: South Africa
+  keywords:
+    - devops engineer
+    - cloud engineer
+  host: jooble.org
+
 # Remotive: remote jobs. No key needed. Remotive asks for only a few requests a
 # day, so the daily alert makes one request per category and search below.
 remotive:

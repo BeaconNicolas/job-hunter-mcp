@@ -3,7 +3,7 @@ import httpx
 from job_hunter.jobs import dedupe, html_to_text
 from job_hunter.sources import adzuna, remotive
 
-from .conftest import GOOD, adzuna_item, fake_api, remotive_item
+from .conftest import GOOD, adzuna_item, body, fake_api, remotive_item
 
 
 def test_adzuna_parses_results_and_sends_keys():
@@ -50,3 +50,32 @@ def test_adzuna_any_of_is_one_call_with_what_or():
     assert len(calls) == 1
     assert calls[0].url.params["what_or"] == "devops terraform"
     assert "what" not in calls[0].url.params
+
+
+def jooble_item(job_id: int, title: str, snippet: str) -> dict:
+    return {
+        "id": job_id,
+        "title": title,
+        "location": "Johannesburg, Gauteng",
+        "snippet": f"&nbsp;{snippet}",
+        "salary": "R60 000 per month",
+        "source": "careers.example.co.za",
+        "type": "Full-time",
+        "link": f"https://jooble.org/desc/{job_id}",
+        "company": "Example Bank",
+        "updated": "2026-11-09T10:00:00.0000000",
+    }
+
+
+def test_jooble_parses_results_and_posts_the_search():
+    from job_hunter.sources import jooble
+
+    calls: list[httpx.Request] = []
+    with fake_api(jooble=[jooble_item(5, "DevOps Engineer", GOOD)], calls=calls)() as client:
+        jobs = jooble.search(client, api_key="k3y", keywords="devops engineer")
+    job = jobs[0]
+    assert (job.id, job.company, job.posted) == ("jooble:5", "Example Bank", "2026-11-09")
+    assert job.location == "Johannesburg, Gauteng"
+    assert job.description == GOOD
+    assert calls[0].method == "POST" and calls[0].url.path == "/api/k3y"
+    assert body(calls[0])["location"] == "South Africa"
