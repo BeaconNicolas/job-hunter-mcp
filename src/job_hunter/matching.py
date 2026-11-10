@@ -27,6 +27,10 @@ _AREA_WORDS = (
 )
 
 
+MIN_SKILLS_FOR_COVERAGE = 3
+NO_TITLE_FIT_CAP = 40
+
+
 @dataclass
 class Match:
     score: int
@@ -58,11 +62,15 @@ def required_years(text: str) -> int | None:
 
 def score_job(title: str, description: str, have: set[str], settings: SearchSettings) -> Match:
     """0-100. 55% skill coverage (skills the job mentions that the CV has),
-    45% title fit, minus 15 when the job asks for clearly more experience."""
+    45% title fit, minus 15 when the job asks for clearly more experience.
+
+    Coverage counts at least three skills, so an advert naming just one skill you
+    have (say Excel) is not a "100% skill match". A job whose title is not in your
+    field is capped at NO_TITLE_FIT_CAP, below any sensible alert threshold."""
     wanted = find_terms(f"{title}\n{description}")
     matched = sorted(wanted & have)
     missing = sorted(wanted - have)
-    coverage = len(matched) / len(wanted) if wanted else 0.3
+    coverage = len(matched) / max(len(wanted), MIN_SKILLS_FOR_COVERAGE) if wanted else 0.3
 
     lowered = title.lower()
     if any(t in lowered for t in settings.target_titles):
@@ -78,6 +86,9 @@ def score_job(title: str, description: str, have: set[str], settings: SearchSett
     if years is not None and years > settings.experience_years + 1:
         score -= 15
         notes.append(f"Asks for {years}+ years of experience; you have about {settings.experience_years}.")
+    if title_fit == "none":
+        score = min(score, NO_TITLE_FIT_CAP)
+        notes.append("The title is not a cloud, DevOps, platform or data role.")
     if "senior" in lowered and settings.experience_years < 5:
         notes.append("Senior title: check the experience it expects.")
     if missing:

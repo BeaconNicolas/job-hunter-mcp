@@ -39,7 +39,7 @@ def configured() -> list[str]:
 
 # ----------------------------------------------------------------- formatting
 def _plural(n: int) -> str:
-    return f"{n} new job{'s' if n != 1 else ''} that match your CV"
+    return f"{n} new job that matches your CV" if n == 1 else f"{n} new jobs that match your CV"
 
 
 def job_line(n: int, job: Job, match: Match) -> str:

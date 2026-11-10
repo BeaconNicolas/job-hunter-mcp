@@ -32,3 +32,19 @@ def test_required_years_needs_experience_nearby():
 def test_excluded_titles(settings):
     assert excluded("Principal Cloud Architect", settings)
     assert not excluded("Cloud Engineer", settings)
+
+
+def test_unrelated_title_never_reaches_the_alert_threshold(cv, settings):
+    """A Remote Office Assistant advert that only mentions Excel used to score 55."""
+    match = score_job(
+        "Remote Office Assistant", "Strong Excel skills and attention to detail.", cv_terms(cv), settings
+    )
+    assert match.title_fit == "none"
+    assert match.score < settings.min_score
+    assert any("not a cloud" in note for note in match.notes)
+
+
+def test_one_matching_skill_is_not_full_coverage(cv, settings):
+    one = score_job("Cloud Engineer", "You know Python.", cv_terms(cv), settings)
+    many = score_job("Cloud Engineer", GOOD, cv_terms(cv), settings)
+    assert one.score < many.score

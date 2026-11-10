@@ -215,9 +215,11 @@ gives 25 test calls, then costs £8 a month (see step 2).
 
 Both the job advert and the CV are scanned for about 100 known technologies
 (`src/job_hunter/vocabulary.py`). The score is 55% skill coverage (the share of the job's
-technologies that your CV has) and 45% title fit (a target title from `search.yaml`, or at
-least a cloud/DevOps/platform title), minus 15 points when the advert asks for clearly more
-years of experience than you have. Missing skills are always listed, so gaps stay visible.
+technologies that your CV has, counting at least three, so one matching skill is not "full
+coverage") and 45% title fit (a target title from `search.yaml`, or at least a
+cloud/DevOps/platform title), minus 15 points when the advert asks for clearly more years of
+experience than you have. Jobs whose title is outside your field are capped at 40, below the
+alert threshold. Missing skills are always listed, so gaps stay visible.
 
 Adzuna only returns a short part of each advert, so its scores are rougher. For an
 important application, paste the full advert into `match_job`.
