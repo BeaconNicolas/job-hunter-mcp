@@ -17,6 +17,8 @@ SECRET_VARS = [
     "WHATSAPP_TEMPLATE",
     "WHATSAPP_TEMPLATE_LANG",
     "WHATSAPP_API_VERSION",
+    "TELEGRAM_BOT_TOKEN",
+    "TELEGRAM_CHAT_ID",
 ]
 
 
@@ -75,6 +77,7 @@ def fake_api(
     adzuna: list[dict] | None = None,
     remotive: list[dict] | None = None,
     whatsapp: Callable[[httpx.Request], httpx.Response] | None = None,
+    telegram: Callable[[httpx.Request], httpx.Response] | None = None,
     calls: list[httpx.Request] | None = None,
 ) -> Callable[[], httpx.Client]:
     """A factory for httpx clients that answer like the real APIs."""
@@ -87,6 +90,10 @@ def fake_api(
             return httpx.Response(200, json={"results": adzuna or []})
         if host == "remotive.com":
             return httpx.Response(200, json={"jobs": remotive or []})
+        if host == "api.telegram.org":
+            if telegram:
+                return telegram(request)
+            return httpx.Response(200, json={"ok": True, "result": {"message_id": 42}})
         if host == "graph.facebook.com":
             if whatsapp:
                 return whatsapp(request)

@@ -10,13 +10,12 @@ from typing import Any, Literal
 import yaml
 from mcp.server.mcpserver import MCPServer
 
-from job_hunter import config
+from job_hunter import config, notify
 from job_hunter.jobs import Job
 from job_hunter.matching import score_job
 from job_hunter.search import collect, http_client, rank
 from job_hunter.tailor import TailorRequest, annotate, apply, save
 from job_hunter.vocabulary import cv_terms, find_terms
-from job_hunter.whatsapp import WhatsAppConfig, WhatsAppError, send, text_payload
 
 INSTRUCTIONS = """\
 Tools for the job search of the person whose CV is in profile/cv.yaml.
@@ -30,6 +29,7 @@ Ground rules:
   problems, fix them rather than working around them.
 - Rewording is fine when it stays true to the original bullet: use the job's
   vocabulary for things the person really did.
+- send_to_phone delivers a message to the user's phone (Telegram and/or WhatsApp).
 """
 
 mcp = MCPServer("job-hunter", instructions=INSTRUCTIONS)
@@ -177,22 +177,19 @@ def tailor_cv(
 
 
 @mcp.tool()
-def send_whatsapp(message: str) -> str:
-    """Send a free-text WhatsApp message to the user's own number, e.g. a shortlist.
-    WhatsApp only delivers free text within 24 hours of the user's last message to
-    the business number."""
-    cfg = WhatsAppConfig.from_env()
-    if cfg is None:
-        return (
-            "WhatsApp is not set up: add WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_TO "
-            "to the MCP config."
-        )
-    try:
-        with http_client() as client:
-            message_id = send(client, cfg, text_payload(cfg, message))
-    except WhatsAppError as exc:
-        return f"Not sent. {exc}"
-    return f"Sent (message id {message_id})."
+def send_to_phone(message: str) -> str:
+    """Send a message to the user's phone, e.g. a shortlist of jobs, through every
+    configured channel: Telegram, and WhatsApp if set up (WhatsApp delivers free text
+    only within 24 hours of the user's last message to the business number)."""
+    if not notify.configured():
+        return f"Not sent: no phone channel is set up. {notify.SETUP_HINT}"
+    with http_client() as client:
+        delivery = notify.send_text(client, message)
+    parts = []
+    if delivery.sent:
+        parts.append("Sent via " + " and ".join(delivery.sent) + ".")
+    parts += [f"Not sent via {e}" for e in delivery.errors]
+    return " ".join(parts)
 
 
 def main() -> None:

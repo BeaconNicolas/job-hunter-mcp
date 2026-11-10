@@ -1,7 +1,7 @@
 [project]
 name = "job-hunter-mcp"
 version = "0.1.0"
-description = "MCP server and daily WhatsApp alert that find jobs matching my CV and tailor the CV to a job, using only facts from the CV."
+description = "MCP server and daily phone alert (Telegram or WhatsApp) that find jobs matching my CV and tailor the CV to a job, using only facts from the CV."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

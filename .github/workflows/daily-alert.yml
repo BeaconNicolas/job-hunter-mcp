@@ -1,5 +1,5 @@
 # Every morning: search for jobs, rank them against profile/cv.yaml and send the
-# best new matches to WhatsApp. Run it by hand from the Actions tab too
+# best new matches to your phone (Telegram, and WhatsApp if configured). Run it by hand from the Actions tab too
 # (tick "dry run" to test the search without sending anything).
 name: Daily job alert
 
@@ -48,6 +48,8 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run }}
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
           WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
           WHATSAPP_TO: ${{ secrets.WHATSAPP_TO }}

@@ -1,4 +1,4 @@
-"""Daily job alert: search, rank against the CV, and WhatsApp the best new matches.
+"""Daily job alert: search, rank against the CV, and send the best new matches to your phone.
 
     job-hunter-alert             # search and send
     job-hunter-alert --dry-run   # search and print, send nothing, remember nothing
@@ -15,14 +15,12 @@ import os
 from datetime import date, timedelta
 from pathlib import Path
 
-from job_hunter import config
+from job_hunter import config, notify
 from job_hunter.jobs import Job
 from job_hunter.matching import Match
 from job_hunter.search import collect, http_client, rank
 from job_hunter.vocabulary import cv_terms
-from job_hunter.whatsapp import WhatsAppConfig, WhatsAppError, send, template_payload, text_payload
 
-TEMPLATE_LISTING_LIMIT = 900  # characters; WhatsApp allows about 1,000 per template variable
 KEEP_SEEN_DAYS = 45
 
 
@@ -41,33 +39,7 @@ def save_seen(path: Path, seen: dict[str, str], today: date) -> None:
     path.write_text(json.dumps({"jobs": kept}, indent=1, sort_keys=True), encoding="utf-8")
 
 
-# ----------------------------------------------------------------- messages
-def job_line(n: int, job: Job, match: Match) -> str:
-    where = f" ({job.location})" if job.location else ""
-    return f"{n}) {job.title} - {job.company}{where}, {match.score}% match: {job.url}"
-
-
-def template_listing(top: list[tuple[Job, Match]]) -> str:
-    """One line per job, cut short to fit in a template variable."""
-    lines: list[str] = []
-    for n, (job, match) in enumerate(top, start=1):
-        line = job_line(n, job, match)
-        if len(" ".join(lines + [line])) > TEMPLATE_LISTING_LIMIT:
-            lines.append(f"(+{len(top) - n + 1} more in the GitHub Actions summary)")
-            break
-        lines.append(line)
-    return " ".join(lines)
-
-
-def text_message(top: list[tuple[Job, Match]]) -> str:
-    parts = [f"*{len(top)} new job{'s' if len(top) != 1 else ''} that match your CV*"]
-    for n, (job, match) in enumerate(top, start=1):
-        details = " · ".join(x for x in (job.location, f"{match.score}% match", job.salary) if x)
-        parts.append(f"{n}. *{job.title}* - {job.company}\n{details}\n{job.url}")
-    parts.append("Ask Claude to tailor your CV for any of these.")
-    return "\n\n".join(parts)
-
-
+# ----------------------------------------------------------------- logs
 def details_in_logs() -> bool:
     """Show job titles in logs? Always locally. On GitHub Actions only when the
     ALERT_DETAILS_IN_LOGS variable is "true": logs of a public repository are public."""
@@ -78,7 +50,7 @@ def details_in_logs() -> bool:
 
 HIDDEN_NOTE = (
     "Job details are hidden here because anyone can read this repository's Actions logs. "
-    "They go to WhatsApp only. To show them, set the repository variable ALERT_DETAILS_IN_LOGS to true."
+    "They go to your phone only. To show them, set the repository variable ALERT_DETAILS_IN_LOGS to true."
 )
 
 
@@ -142,42 +114,37 @@ def run(dry_run: bool = False, today: date | None = None) -> int:
         top = new[: settings.max_alerts]
         print(f"{len(collected.jobs)} jobs found, {len(good)} scored {settings.min_score}+, {len(new)} new.")
 
-        cfg = WhatsAppConfig.from_env()
+        channels = notify.configured()
         notes = list(collected.notes)
-        if cfg is None:
-            notes.append(
-                "WhatsApp not configured: set WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_TO."
-            )
+        if not channels:
+            notes.append(f"No phone channel configured. {notify.SETUP_HINT}")
 
         if not top:
             print("No new matches to send today.")
             write_summary(good, [], notes)
             return 0
 
-        if dry_run or cfg is None:
+        if dry_run or not channels:
             if details_in_logs():
-                print("\n" + text_message(top))
+                print("\n" + notify.plain_message(top))
             else:
                 print(f"{len(top)} job(s) would be sent. {HIDDEN_NOTE}")
             write_summary(good, [], notes + (["Dry run: nothing was sent."] if dry_run else []))
             return 0
 
-        try:
-            if cfg.template:
-                payload = template_payload(cfg, [str(len(top)), template_listing(top)])
-            else:
-                payload = text_payload(cfg, text_message(top))
-            message_id = send(client, cfg, payload)
-        except WhatsAppError as exc:
-            print(f"Sending failed: {exc}")
-            write_summary(good, [], notes + [f"Sending failed: {exc}"])
-            return 1
+        delivery = notify.send_jobs(client, top)
 
-    print(f"Sent {len(top)} job(s) to WhatsApp (message {message_id}).")
+    for error in delivery.errors:
+        print(f"Sending failed: {error}")
+    if not delivery.sent:
+        write_summary(good, [], notes + [f"Sending failed: {e}" for e in delivery.errors])
+        return 1
+
+    print(f"Sent {len(top)} job(s) to {' and '.join(delivery.sent)}.")
     for job, _ in top:
         seen[job.id] = today.isoformat()
     save_seen(state, seen, today)
-    write_summary(good, top, notes)
+    write_summary(good, top, notes + [f"Sending failed: {e}" for e in delivery.errors])
     return 0
 
 

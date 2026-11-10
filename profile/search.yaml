@@ -29,8 +29,8 @@ exclude_title_words:
 # more are still shown, but score lower and are flagged.
 experience_years: 3
 
-min_score: 55   # 0-100: below this, a job is not sent to WhatsApp
-max_alerts: 5   # most jobs per daily WhatsApp message
+min_score: 55   # 0-100: below this, a job is not sent to your phone
+max_alerts: 5   # most jobs per daily alert
 
 # Adzuna: jobs in South Africa. Needs an API key (README). Every search below is one
 # API call per run. Without a paid plan Adzuna allows only 25 calls in total, so the

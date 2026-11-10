@@ -27,7 +27,7 @@ def test_lists_all_tools():
         "get_job",
         "match_job",
         "tailor_cv",
-        "send_whatsapp",
+        "send_to_phone",
     }
 
 
@@ -59,6 +59,11 @@ def test_tailor_cv_refuses_then_succeeds(isolated):
     assert good["docx"].startswith(str(isolated / "output"))
 
 
-def test_send_whatsapp_explains_missing_setup():
-    text = call("send_whatsapp", {"message": "hi"}).content[0].text
-    assert "not set up" in text
+def test_send_to_phone(monkeypatch):
+    text = call("send_to_phone", {"message": "hi"}).content[0].text
+    assert "no phone channel" in text and "TELEGRAM_BOT_TOKEN" in text
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:abc")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "1")
+    monkeypatch.setattr(server, "http_client", fake_api())
+    assert call("send_to_phone", {"message": "hi"}).content[0].text == "Sent via Telegram."

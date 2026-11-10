@@ -8,14 +8,15 @@ My job search assistant. It does three things:
 2. **Tailors my CV to a job** in Claude Desktop and saves it as a Word file. It
    reorders, rewords and highlights what is **already in my CV**, and refuses to add
    anything that isn't (a skill, a number, a technology).
-3. **Sends a WhatsApp alert every morning** with the best new matches, from a
-   scheduled GitHub Actions workflow.
+3. **Sends a Telegram alert every morning** with the best new matches, from a
+   scheduled GitHub Actions workflow. WhatsApp is supported too, but Meta requires a
+   verified business for it (see step 4).
 
 > **This repository is public on purpose.** `profile/cv.yaml` includes my contact
 > details so employers can reach me. API keys and tokens never go in the code: they
 > live in GitHub secrets and in my local Claude Desktop config. Because Actions logs of a
 > public repository are public too, the daily alert keeps job details out of them and
-> sends them only to WhatsApp.
+> sends them only to my phone.
 
 ## How it fits together
 
@@ -25,7 +26,7 @@ flowchart TD
   search["profile/search.yaml<br/>(what to look for)"]
 
   subgraph laptop["My laptop: Claude Desktop"]
-    mcp["MCP server<br/>get_cv · search_jobs · get_job<br/>match_job · tailor_cv · send_whatsapp"]
+    mcp["MCP server<br/>get_cv · search_jobs · get_job<br/>match_job · tailor_cv · send_to_phone"]
     docx["output/tailored/*.docx"]
   end
 
@@ -35,7 +36,7 @@ flowchart TD
 
   adzuna["Adzuna API<br/>(South Africa)"]
   remotive["Remotive API<br/>(remote)"]
-  wa["WhatsApp Cloud API"]
+  tg["Telegram bot<br/>(or WhatsApp)"]
   phone["My phone"]
 
   cv --> mcp
@@ -47,7 +48,8 @@ flowchart TD
   alert --> adzuna
   alert --> remotive
   mcp --> docx
-  alert --> wa --> phone
+  alert --> tg --> phone
+  mcp --> tg
 ```
 
 ## The MCP tools
@@ -59,14 +61,14 @@ flowchart TD
 | `get_job` | Full details of a job from the last search. |
 | `match_job` | Paste any job description (LinkedIn included): score, skills you have and lack, and your most relevant bullets and projects. |
 | `tailor_cv` | Builds a tailored CV and saves it to `output/tailored/`. Rejects skills, technologies or numbers that are not in your CV. |
-| `send_whatsapp` | Sends a message to your WhatsApp (free text works within 24 hours of your last message to the business number). |
+| `send_to_phone` | Sends a message to your phone through Telegram (and WhatsApp, if set up). |
 
 Things to ask Claude once it is connected:
 
 - *"Search for platform engineer jobs and show me the five best fits."*
 - *"Here's a job advert: [paste]. How well do I fit, and what am I missing?"*
 - *"Tailor my CV for this job."*
-- *"Send the shortlist to my WhatsApp."*
+- *"Send the shortlist to my phone."*
 
 ## Setup
 
@@ -88,9 +90,8 @@ Things to ask Claude once it is connected:
          "env": {
            "ADZUNA_APP_ID": "",
            "ADZUNA_APP_KEY": "",
-           "WHATSAPP_TOKEN": "",
-           "WHATSAPP_PHONE_NUMBER_ID": "",
-           "WHATSAPP_TO": ""
+           "TELEGRAM_BOT_TOKEN": "",
+           "TELEGRAM_CHAT_ID": ""
          }
        }
      }
@@ -99,6 +100,8 @@ Things to ask Claude once it is connected:
 
    Use your own folder path (on a Mac, something like `/Users/you/job-hunter-mcp`).
    Fill the values in as you get them (steps 2 and 3); empty ones are simply skipped.
+   WhatsApp settings (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TO`) can be
+   added the same way if you use WhatsApp.
    If Claude Desktop says it cannot find `uv`, put the full path instead
    (`where uv` on Windows, `which uv` on a Mac).
 5. Restart Claude Desktop. The tools appear under the **+** / tools menu.
@@ -120,7 +123,26 @@ with Remotive.
 
 Without a key, the tools still search Remotive (remote jobs) and say that Adzuna was skipped.
 
-### 3. WhatsApp (Meta WhatsApp Cloud API)
+### 3. Telegram bot (free; recommended)
+
+1. In Telegram, search for **@BotFather** (the official one has a blue tick) and tap **Start**.
+2. Send `/newbot`. Give it a name, e.g. `Job Hunter Alerts`, and a username ending in `bot`,
+   e.g. `beacon_jobhunter_bot`. BotFather replies with a **token** like `123456789:AA…`.
+   Treat it like a password.
+3. Open your new bot (BotFather's message links to it), tap **Start** and send it "hi".
+4. Find your **chat ID**: in a browser, open
+   `https://api.telegram.org/bot<TOKEN>/getUpdates` (put your token in place of `<TOKEN>`).
+   In the text that appears, find `"chat":{"id":` followed by a number, e.g. `"id":123456789`.
+   That number is your chat ID. If the page shows `"result":[]`, send the bot another message
+   and refresh.
+
+Only you can talk to your bot, and Telegram costs nothing, with no 24-hour rule.
+
+### 4. WhatsApp (optional; Meta WhatsApp Cloud API)
+
+**Heads-up:** Meta may lock new WhatsApp Business accounts of unverified businesses
+(error 131031, "Business Account locked"), even for the free test number. Verification needs
+official business documents. Without a registered business, use Telegram.
 
 1. Go to [developers.facebook.com](https://developers.facebook.com/), **My Apps → Create App**,
    and choose the use case for connecting with customers on WhatsApp. Create or pick a
@@ -144,13 +166,13 @@ Without a key, the tools still search Remotive (remote jobs) and say that Adzuna
    - Sample values: `3` and `1) Cloud Engineer - Acme (Johannesburg), 82% match: https://example.com`.
    - Submit. Approval usually takes minutes to a few hours.
 5. From your phone, send any message to the business number once. That also opens a
-   24-hour window in which `send_whatsapp` can send you free text.
+   24-hour window in which `send_to_phone` can send you free WhatsApp text.
 
 Meta charges per template message delivered (the rate depends on the category and
 country); check [Meta's pricing page](https://developers.facebook.com/docs/whatsapp/pricing)
 for current South African rates. One alert a day is a small amount.
 
-### 4. GitHub secrets and variables (daily alert)
+### 5. GitHub secrets and variables (daily alert)
 
 In this repository: **Settings → Secrets and variables → Actions**.
 
@@ -158,7 +180,9 @@ In this repository: **Settings → Secrets and variables → Actions**.
 | --- | --- | --- |
 | `ADZUNA_APP_ID` | Secret | Adzuna Application ID |
 | `ADZUNA_APP_KEY` | Secret | Adzuna Application key |
-| `WHATSAPP_TOKEN` | Secret | Permanent system-user token |
+| `TELEGRAM_BOT_TOKEN` | Secret | The bot token from @BotFather |
+| `TELEGRAM_CHAT_ID` | Secret | Your chat ID (step 3) |
+| `WHATSAPP_TOKEN` | Secret | Optional: permanent system-user token |
 | `WHATSAPP_PHONE_NUMBER_ID` | Secret | Phone number ID from API Setup |
 | `WHATSAPP_TO` | Secret | Your number with country code, digits only: `27…` |
 | `WHATSAPP_TEMPLATE` | Variable | `job_alert` |
@@ -181,7 +205,7 @@ gives 25 test calls, then costs £8 a month (see step 2).
   help matching. `include: false` hides an item from the default CV while keeping it
   available for tailoring.
 - **`profile/search.yaml`** holds the job titles to favour, titles to skip, the minimum
-  score for WhatsApp, the Adzuna searches (each one is an API call per run) and the
+  score for alerts, the Adzuna searches (each one is an API call per run) and the
   Remotive categories.
 - Render the master CV to Word: `uv run job-hunter-render profile/cv.yaml output/CV.docx`.
 

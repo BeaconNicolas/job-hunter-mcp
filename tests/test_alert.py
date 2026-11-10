@@ -1,6 +1,6 @@
 import httpx
 
-from job_hunter import alert
+from job_hunter import alert, notify
 
 from .conftest import BAD, GOOD, adzuna_item, body, fake_api, remotive_item
 
@@ -99,8 +99,8 @@ def test_long_listing_fits_in_a_template_variable():
         )
         for i in range(5)
     ]
-    listing = alert.template_listing(jobs)
-    assert len(listing) <= 1000 and "more in the GitHub Actions summary" in listing
+    listing = notify.template_listing(jobs)
+    assert len(listing) <= 1000 and "more: ask Claude" in listing
 
 
 def test_public_actions_logs_hide_job_details(monkeypatch, isolated, capsys):
@@ -143,3 +143,51 @@ def test_adzuna_failure_is_reported_without_the_key(monkeypatch, capsys):
     assert "HTTP 403" in out and "call limit" in out
     assert "super-secret-key" not in out
     assert "DevOps Engineer" in out
+
+
+def telegram_env(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:secret-token")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "987654")
+
+
+def test_sends_to_telegram(monkeypatch):
+    telegram_env(monkeypatch)
+    calls: list[httpx.Request] = []
+    use_api(monkeypatch, remotive=[remotive_item(7, "DevOps Engineer & SRE", GOOD)], calls=calls)
+    assert alert.run() == 0
+    sent = [r for r in calls if r.url.host == "api.telegram.org"]
+    assert len(sent) == 1
+    assert sent[0].url.path == "/bot123:secret-token/sendMessage"
+    payload = body(sent[0])
+    assert payload["chat_id"] == "987654" and payload["parse_mode"] == "HTML"
+    assert "<b>DevOps Engineer &amp; SRE</b>" in payload["text"]
+    assert 'href="https://remotive.com/remote-jobs/devops/7"' in payload["text"]
+
+
+def test_one_channel_failing_still_counts_as_sent(monkeypatch, capsys):
+    telegram_env(monkeypatch)
+    whatsapp_env(monkeypatch)
+    locked = {"error": {"code": 131031, "message": "Business Account locked"}}
+    use_api(
+        monkeypatch,
+        remotive=[remotive_item(7, "DevOps Engineer", GOOD)],
+        whatsapp=lambda _r: httpx.Response(400, json=locked),
+    )
+    assert alert.run() == 0
+    out = capsys.readouterr().out
+    assert "Sent 1 job(s) to Telegram." in out
+    assert "131031" in out
+
+
+def test_telegram_errors_never_show_the_token(monkeypatch, capsys):
+    telegram_env(monkeypatch)
+    not_found = {"ok": False, "error_code": 400, "description": "Bad Request: chat not found"}
+    use_api(
+        monkeypatch,
+        remotive=[remotive_item(7, "DevOps Engineer", GOOD)],
+        telegram=lambda _r: httpx.Response(400, json=not_found),
+    )
+    assert alert.run() == 1
+    out = capsys.readouterr().out
+    assert "pressed Start" in out
+    assert "secret-token" not in out
