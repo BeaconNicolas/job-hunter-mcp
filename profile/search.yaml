@@ -71,7 +71,7 @@ remotive:
 # sends you the Word file. Needs the ANTHROPIC_API_KEY secret; each CV costs a few US
 # cents of Claude API usage (README).
 tailoring:
-  enabled: true
+  enabled: false          # paused; set to true once ANTHROPIC_API_KEY is saved
   max_per_day: 2          # tailored CVs per day at most (cost control)
   model: claude-opus-5-5  # claude-sonnet-5-5 costs about half
   effort: medium          # low | medium | high
