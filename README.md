@@ -10,7 +10,8 @@ My job search assistant. It does three things:
    reorders, rewords and highlights what is **already in my CV**, and refuses to add
    anything that isn't (a skill, a number, a technology).
 3. **Sends a Telegram alert every morning** with the best new matches, from a
-   scheduled GitHub Actions workflow. WhatsApp is supported too, but Meta requires a
+   scheduled GitHub Actions workflow, and **a tailored Word CV for the top matches**
+   (optional, uses the Claude API; see step 6). WhatsApp is supported too, but Meta requires a
    verified business for it (see step 4).
 
 > **This repository is public on purpose.** `profile/cv.yaml` includes my contact
@@ -212,6 +213,30 @@ Claude to `search_jobs`.
 
 Costs: GitHub Actions is free for public repositories, and Remotive's API is free. Adzuna
 gives 25 test calls, then costs £8 a month (see step 2).
+
+### 6. Automatic CV tailoring (optional, Claude API)
+
+For the best jobs in each daily alert (2 a day by default), Claude writes a tailoring
+plan, the same honesty check as `tailor_cv` validates it against `profile/cv.yaml`
+(invented skills, technologies or numbers are sent back for correction, at most twice),
+and your Telegram bot sends you the tailored Word CV with a one-line note on fit and gaps.
+
+1. Create an account at [platform.claude.com](https://platform.claude.com/) (the Claude
+   Developer Platform). API usage is billed separately from a Claude.ai plan: add a small
+   amount of prepaid credit, and set a monthly spend limit under the billing settings.
+2. Create an API key and save it as the GitHub secret `ANTHROPIC_API_KEY`.
+3. Tune it in `profile/search.yaml` under `tailoring:` (`enabled`, `max_per_day`, `model`,
+   `effort`).
+
+**Cost:** with the default model (Claude Opus 5.5, about US$4 per million input tokens and
+US$20 per million output tokens) one tailored CV uses roughly 5,000 input and 2,000-4,000
+output tokens, so about US$0.05-0.10. At most 2 a day keeps it under about US$6 a month,
+and less on days with fewer matches. `claude-sonnet-5-5` costs about half.
+
+Notes: tailored CVs go to Telegram only (WhatsApp templates cannot carry files). Adverts from
+Jooble and Adzuna are short excerpts, so those CVs are tailored more lightly; paste the full
+advert into Claude Desktop for an important application. The request enables Claude's
+server-side refusal fallback, so a rare declined request is retried on another model.
 
 ## Editing the CV and the search
 

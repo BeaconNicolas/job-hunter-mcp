@@ -10,6 +10,7 @@ The token is part of every request URL, so errors here never include the URL.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import httpx
 
@@ -17,6 +18,7 @@ from job_hunter.config import env
 
 API = "https://api.telegram.org/bot{token}/{method}"
 MAX_LENGTH = 4096
+DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 
 class TelegramError(RuntimeError):
@@ -130,3 +132,29 @@ def chat_id_cli() -> None:
         print(exc)
         raise SystemExit(1) from None
     print("Done: your bot has sent you your chat ID in Telegram.")
+
+
+def send_document(client: httpx.Client, cfg: TelegramConfig, path: Path, caption: str = "") -> int:
+    """Send a file (e.g. a tailored CV) with an optional caption of up to 1,024 characters."""
+    data = {"chat_id": cfg.chat_id}
+    if caption:
+        data["caption"] = caption[:1024]
+    try:
+        with open(path, "rb") as handle:
+            response = client.post(
+                API.format(token=cfg.token, method="sendDocument"),
+                data=data,
+                files={"document": (path.name, handle, DOCX_MIME)},
+            )
+    except httpx.HTTPError as exc:
+        raise TelegramError(f"Could not reach Telegram ({type(exc).__name__}).") from None
+    try:
+        body = response.json()
+    except ValueError:
+        body = {}
+    if response.is_success and body.get("ok"):
+        return int(body.get("result", {}).get("message_id", 0))
+    status = int(body.get("error_code") or response.status_code)
+    description = str(body.get("description") or "no description")
+    hint = _hint(status, description)
+    raise TelegramError(f"Telegram error {status}: {description}." + (f" {hint}" if hint else ""))

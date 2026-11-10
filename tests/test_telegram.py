@@ -56,8 +56,7 @@ def test_network_errors_do_not_leak_the_url():
 
 def updates(*chats):
     result = [
-        {"update_id": n, "message": {"message_id": n, "chat": chat, "text": "hi"}}
-        for n, chat in enumerate(chats)
+        {"update_id": n, "message": {"message_id": n, "chat": chat, "text": "hi"}} for n, chat in enumerate(chats)
     ]
     return httpx.Response(200, json={"ok": True, "result": result})
 

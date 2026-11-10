@@ -36,9 +36,7 @@ def test_excluded_titles(settings):
 
 def test_unrelated_title_never_reaches_the_alert_threshold(cv, settings):
     """A Remote Office Assistant advert that only mentions Excel used to score 55."""
-    match = score_job(
-        "Remote Office Assistant", "Strong Excel skills and attention to detail.", cv_terms(cv), settings
-    )
+    match = score_job("Remote Office Assistant", "Strong Excel skills and attention to detail.", cv_terms(cv), settings)
     assert match.title_fit == "none"
     assert match.score < settings.min_score
     assert any("not a cloud" in note for note in match.notes)

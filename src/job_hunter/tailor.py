@@ -84,9 +84,7 @@ def check_claims(text: str, allowed_terms: set[str], allowed_numbers: set[str], 
         problems.append(f"{where}: mentions {', '.join(new_terms)}, which your CV does not.")
     new_numbers = sorted(_numbers(text) - allowed_numbers)
     if new_numbers:
-        problems.append(
-            f"{where}: uses the number(s) {', '.join(new_numbers)}, which your CV does not contain."
-        )
+        problems.append(f"{where}: uses the number(s) {', '.join(new_numbers)}, which your CV does not contain.")
     return problems
 
 
@@ -150,9 +148,7 @@ def apply(master: dict, req: TailorRequest, today: date | None = None) -> Tailor
             problems += check_claims(text, have, _numbers(original), f"rewrite of {bullet_id}")
 
     # Skills: only items that already exist in the CV.
-    existing_skills = {
-        str(item).lower(): str(item) for g in master.get("skills", []) for item in g.get("items", [])
-    }
+    existing_skills = {str(item).lower(): str(item) for g in master.get("skills", []) for item in g.get("items", [])}
     if req.skills is not None:
         for group in req.skills:
             for item in group.get("items", []):

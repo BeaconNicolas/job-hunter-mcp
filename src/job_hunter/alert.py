@@ -15,10 +15,14 @@ import os
 from datetime import date, timedelta
 from pathlib import Path
 
-from job_hunter import config, notify
+import anthropic
+
+from job_hunter import autotailor, config, notify
+from job_hunter.config import env
 from job_hunter.jobs import Job
 from job_hunter.matching import Match
 from job_hunter.search import collect, http_client, rank
+from job_hunter.telegram import TelegramConfig, TelegramError, send_document
 from job_hunter.vocabulary import cv_terms
 
 KEEP_SEEN_DAYS = 45
@@ -126,9 +130,7 @@ def run(dry_run: bool = False, preview: bool = False, today: date | None = None)
 
         if preview:
             sample = ranked[:PREVIEW_SIZE]
-            heading = (
-                f"Preview: the {len(sample)} best-scoring jobs today (alerts start at {settings.min_score})"
-            )
+            heading = f"Preview: the {len(sample)} best-scoring jobs today (alerts start at {settings.min_score})"
             if not sample or not channels:
                 reason = "Nothing to preview." if not sample else "No phone channel configured."
                 print(f"{reason} {notify.SETUP_HINT}" if sample else reason)
@@ -165,7 +167,70 @@ def run(dry_run: bool = False, preview: bool = False, today: date | None = None)
         seen[job.id] = today.isoformat()
     save_seen(state, seen, today)
     write_summary(good, top, notes + [f"Sending failed: {e}" for e in delivery.errors])
+    tailor_and_send(top, settings, today)
     return 0
+
+
+# ----------------------------------------------------------------- automatic CV tailoring
+def claude_client() -> anthropic.Anthropic:
+    return anthropic.Anthropic()
+
+
+def tailor_and_send(top: list[tuple[Job, Match]], settings: config.SearchSettings, today: date) -> int:
+    """Tailor the CV for the best jobs just sent and send each Word file to Telegram.
+    Failures here never fail the alert: the job list has already been delivered."""
+    if not settings.tailoring_enabled or not top:
+        return 0
+    if not env("ANTHROPIC_API_KEY"):
+        print("Note: CV tailoring skipped: set the ANTHROPIC_API_KEY secret to get tailored CVs.")
+        return 0
+    tg = TelegramConfig.from_env()
+    if tg is None:
+        print("Note: CV tailoring skipped: tailored CVs are delivered by Telegram, which is not set up.")
+        return 0
+
+    master = config.load_cv()
+    client = claude_client()
+    sent = 0
+    batch = top[: settings.tailoring_max_per_day]
+    with http_client() as http:
+        for job, match in batch:
+            try:
+                result = autotailor.tailor_job(
+                    client,
+                    master,
+                    job,
+                    model=settings.tailoring_model,
+                    effort=settings.tailoring_effort,
+                    output_dir=config.output_dir(),
+                    today=today,
+                )
+            except anthropic.AuthenticationError:
+                print("CV tailoring stopped: the Anthropic API key was rejected. Check ANTHROPIC_API_KEY.")
+                break
+            except anthropic.PermissionDeniedError:
+                print("CV tailoring stopped: the Anthropic API key may not use this model.")
+                break
+            except anthropic.RateLimitError:
+                print("CV tailoring stopped: Claude API rate limit reached; the next run will try again.")
+                break
+            except anthropic.APIStatusError as exc:
+                # e.g. 400 "credit balance is too low", 5xx outages
+                print(f"CV tailoring failed for one job: Claude API error {exc.status_code}: {exc.message[:200]}")
+                continue
+            except anthropic.APIConnectionError:
+                print("CV tailoring failed for one job: could not reach the Claude API.")
+                continue
+            if not result.ok:
+                print(f"CV tailoring failed for one job: {result.error}")
+                continue
+            try:
+                send_document(http, tg, Path(result.docx_path), autotailor.caption(result, match.score))
+                sent += 1
+            except TelegramError as exc:
+                print(f"A tailored CV could not be sent: {exc}")
+    print(f"Tailored and sent {sent} of {len(batch)} CV(s) to Telegram.")
+    return sent
 
 
 def main(argv: list[str] | None = None) -> int:

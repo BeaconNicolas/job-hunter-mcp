@@ -37,16 +37,12 @@ def collect(
     if where in ("south_africa", "both"):
         app_id, app_key = env("ADZUNA_APP_ID"), env("ADZUNA_APP_KEY")
         if not (app_id and app_key):
-            out.notes.append(
-                "Adzuna skipped: set ADZUNA_APP_ID and ADZUNA_APP_KEY to search South African jobs."
-            )
+            out.notes.append("Adzuna skipped: set ADZUNA_APP_ID and ADZUNA_APP_KEY to search South African jobs.")
         else:
             if query:
                 searches = [(f"'{query}'", {"query": query})]
             else:
-                searches = [
-                    (f"any of '{' '.join(settings.adzuna_any_of)}'", {"any_of": settings.adzuna_any_of})
-                ]
+                searches = [(f"any of '{' '.join(settings.adzuna_any_of)}'", {"any_of": settings.adzuna_any_of})]
                 searches = searches if settings.adzuna_any_of else []
                 searches += [(f"'{q}'", {"query": q}) for q in settings.adzuna_queries]
             for label, terms in searches:

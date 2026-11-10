@@ -25,18 +25,14 @@ def test_rejects_skill_not_in_cv(cv):
 
 
 def test_rejects_invented_technology_and_numbers_in_summary(cv):
-    result = apply(
-        cv, req(summary="Platform engineer with 8 years of Kubernetes and Azure experience."), TODAY
-    )
+    result = apply(cv, req(summary="Platform engineer with 8 years of Kubernetes and Azure experience."), TODAY)
     assert not result.ok
     text = " ".join(result.problems)
     assert "Azure" in text and "Kubernetes" in text and "8" in text
 
 
 def test_rewrite_may_not_add_numbers(cv):
-    result = apply(
-        cv, req(rewrites={"e1.r2.b1": "Fixed 12 broken AWS CI/CD pipelines, restoring deployments."}), TODAY
-    )
+    result = apply(cv, req(rewrites={"e1.r2.b1": "Fixed 12 broken AWS CI/CD pipelines, restoring deployments."}), TODAY)
     assert not result.ok
     assert "12" in result.problems[0]
 

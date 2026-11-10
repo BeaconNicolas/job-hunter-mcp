@@ -49,6 +49,10 @@ class SearchSettings:
     jooble_keywords: list[str] = field(default_factory=list)
     jooble_location: str = "South Africa"
     jooble_host: str = "jooble.org"
+    tailoring_enabled: bool = False
+    tailoring_max_per_day: int = 2
+    tailoring_model: str = "claude-opus-5-5"
+    tailoring_effort: str = "medium"
     remotive_categories: list[str] = field(default_factory=list)
     remotive_searches: list[str] = field(default_factory=list)
     remotive_allowed_locations: list[str] = field(default_factory=list)
@@ -58,6 +62,7 @@ class SearchSettings:
         data = load_yaml(path or profile_dir() / "search.yaml")
         adzuna = data.get("adzuna", {})
         jooble = data.get("jooble", {})
+        tailoring = data.get("tailoring", {})
         remotive = data.get("remotive", {})
         return cls(
             target_titles=[t.lower() for t in data.get("target_titles", [])],
@@ -72,6 +77,10 @@ class SearchSettings:
             jooble_keywords=list(jooble.get("keywords", [])),
             jooble_location=jooble.get("location", "South Africa"),
             jooble_host=jooble.get("host", "jooble.org"),
+            tailoring_enabled=bool(tailoring.get("enabled", False)),
+            tailoring_max_per_day=int(tailoring.get("max_per_day", 2)),
+            tailoring_model=str(tailoring.get("model", "claude-opus-5-5")),
+            tailoring_effort=str(tailoring.get("effort", "medium")),
             adzuna_max_days_old=int(adzuna.get("max_days_old", 3)),
             remotive_categories=list(remotive.get("categories", [])),
             remotive_searches=list(remotive.get("searches", [])),

@@ -47,9 +47,7 @@ def test_search_then_get_job(monkeypatch):
 
 
 def test_tailor_cv_refuses_then_succeeds(isolated):
-    bad = call(
-        "tailor_cv", {"job_title": "SRE", "company": "Acme", "summary": "Kubernetes expert."}
-    ).structured_content
+    bad = call("tailor_cv", {"job_title": "SRE", "company": "Acme", "summary": "Kubernetes expert."}).structured_content
     assert bad["ok"] is False and "Kubernetes" in bad["problems"][0]
     good = call(
         "tailor_cv",

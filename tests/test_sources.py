@@ -8,9 +8,7 @@ from .conftest import GOOD, adzuna_item, body, fake_api, remotive_item
 
 def test_adzuna_parses_results_and_sends_keys():
     calls: list[httpx.Request] = []
-    with fake_api(
-        adzuna=[adzuna_item("1", "<strong>Cloud</strong> Engineer", GOOD)], calls=calls
-    )() as client:
+    with fake_api(adzuna=[adzuna_item("1", "<strong>Cloud</strong> Engineer", GOOD)], calls=calls)() as client:
         jobs = adzuna.search(client, app_id="id", app_key="key", query="cloud engineer")
     job = jobs[0]
     assert (job.id, job.title, job.company, job.posted) == (

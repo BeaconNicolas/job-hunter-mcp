@@ -219,12 +219,8 @@ def render_docx(cv: dict, path: str | Path) -> Path:
             org = job["org"] + (f", {job['location']}" if job.get("location") else "")
             d.line_with_date(org, period(job), space_before=0 if n == 0 else 6)
             for role in included(job.get("roles")):
-                d.line_with_date(
-                    role["title"], period(role), left_bold=True, left_italic=True, space_before=3
-                )
-                for b in included(
-                    [b if isinstance(b, dict) else {"text": b} for b in role.get("bullets", [])]
-                ):
+                d.line_with_date(role["title"], period(role), left_bold=True, left_italic=True, space_before=3)
+                for b in included([b if isinstance(b, dict) else {"text": b} for b in role.get("bullets", [])]):
                     d.bullet(bullet_text(b))
 
     projects = included(cv.get("projects"))

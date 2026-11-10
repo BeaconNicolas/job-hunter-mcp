@@ -109,6 +109,4 @@ def send(client: httpx.Client, cfg: WhatsAppConfig, payload: dict) -> str:
     code = error.get("code")
     detail = (error.get("error_data") or {}).get("details") or error.get("message") or response.text[:300]
     hint = _HINTS.get(code, "")
-    raise WhatsAppError(
-        f"WhatsApp API error {code or response.status_code}: {detail}" + (f" {hint}" if hint else "")
-    )
+    raise WhatsAppError(f"WhatsApp API error {code or response.status_code}: {detail}" + (f" {hint}" if hint else ""))

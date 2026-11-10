@@ -113,10 +113,7 @@ TERMS: dict[str, list[str]] = {
 
 @cache
 def _compiled() -> dict[str, re.Pattern[str]]:
-    return {
-        name: re.compile("|".join(f"(?:{p})" for p in patterns), re.IGNORECASE)
-        for name, patterns in TERMS.items()
-    }
+    return {name: re.compile("|".join(f"(?:{p})" for p in patterns), re.IGNORECASE) for name, patterns in TERMS.items()}
 
 
 def find_terms(text: str) -> set[str]:

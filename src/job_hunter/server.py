@@ -119,9 +119,7 @@ def match_job(job_description: str, job_title: str = "") -> dict[str, Any]:
             for bullet in role.get("bullets", []):
                 hits = relevance(bullet["text"], bullet.get("tags", []))
                 if hits:
-                    bullets.append(
-                        {"id": bullet["id"], "role": role["title"], "text": bullet["text"], "matches": hits}
-                    )
+                    bullets.append({"id": bullet["id"], "role": role["title"], "text": bullet["text"], "matches": hits})
     bullets.sort(key=lambda b: len(b["matches"]), reverse=True)
     projects = [
         {"id": p["id"], "name": p["name"], "matches": hits}

@@ -9,9 +9,7 @@ from job_hunter.config import SearchSettings
 from job_hunter.vocabulary import find_terms
 
 # "5+ years", "3-5 years", "at least 4 years", "minimum of 6 yrs"
-_YEARS = re.compile(
-    r"(\d{1,2})\s*(?:\+|plus)?\s*(?:-|to|–)?\s*(?:\d{1,2})?\s*\+?\s*(?:years?|yrs)", re.IGNORECASE
-)
+_YEARS = re.compile(r"(\d{1,2})\s*(?:\+|plus)?\s*(?:-|to|–)?\s*(?:\d{1,2})?\s*\+?\s*(?:years?|yrs)", re.IGNORECASE)
 
 # Words in a title that say the job is in the right area even when it is not an exact target title.
 _AREA_WORDS = (
