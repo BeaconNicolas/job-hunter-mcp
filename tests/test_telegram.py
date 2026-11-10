@@ -29,6 +29,7 @@ def test_send_text_plain_and_html():
     ("status", "description", "hint"),
     [
         (401, "Unauthorized", "bot token is wrong"),
+        (404, "Not Found", "not in the right format"),
         (403, "Forbidden: bot was blocked by the user", "press Start"),
         (400, "Bad Request: chat not found", "TELEGRAM_CHAT_ID is wrong"),
     ],

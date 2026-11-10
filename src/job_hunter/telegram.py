@@ -40,6 +40,12 @@ def _hint(status: int, description: str) -> str:
     text = description.lower()
     if status == 401:
         return "The bot token is wrong. Copy it again from @BotFather."
+    if status == 404:
+        return (
+            "The bot token is not in the right format. It should be only the token, like "
+            "123456789:AAH... (digits, a colon, then letters), with no 'bot' in front, no quotes "
+            "and no other text. In @BotFather: /mybots > your bot > API Token."
+        )
     if "chat not found" in text:
         return "TELEGRAM_CHAT_ID is wrong, or you have not pressed Start in your bot's chat yet."
     if status == 403:
