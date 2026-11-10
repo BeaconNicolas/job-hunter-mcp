@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-from job_hunter.telegram import TelegramConfig, TelegramError, send_text
+from job_hunter.telegram import TelegramConfig, TelegramError, chat_id_cli, send_chat_id_to_user, send_text
 
 from .conftest import body, fake_api
 
@@ -51,3 +51,39 @@ def test_network_errors_do_not_leak_the_url():
     with pytest.raises(TelegramError) as caught:
         send_text(client, CFG, "x")
     assert "123:abc" not in str(caught.value) and "ConnectError" in str(caught.value)
+
+
+def updates(*chats):
+    result = [
+        {"update_id": n, "message": {"message_id": n, "chat": chat, "text": "hi"}}
+        for n, chat in enumerate(chats)
+    ]
+    return httpx.Response(200, json={"ok": True, "result": result})
+
+
+def test_bot_sends_the_chat_id_to_the_user(capsys):
+    calls: list[httpx.Request] = []
+
+    def reply(request):
+        calls.append(request)
+        if request.url.path.endswith("/getUpdates"):
+            return updates({"id": -100, "type": "group"}, {"id": 777, "type": "private", "first_name": "B"})
+        return httpx.Response(200, json={"ok": True, "result": {"message_id": 1}})
+
+    with fake_api(telegram=reply)() as client:
+        send_chat_id_to_user(client, "123:abc")
+    sent = body(calls[-1])
+    assert sent["chat_id"] == "777"
+    assert "Your chat ID is 777" in sent["text"]
+    assert capsys.readouterr().out == ""  # nothing printed
+
+
+def test_no_messages_yet_explains_what_to_do():
+    with fake_api(telegram=lambda _r: updates())() as client, pytest.raises(TelegramError, match="tap Start"):
+        send_chat_id_to_user(client, "123:abc")
+
+
+def test_cli_needs_the_token(capsys):
+    with pytest.raises(SystemExit):
+        chat_id_cli()
+    assert "TELEGRAM_BOT_TOKEN" in capsys.readouterr().out

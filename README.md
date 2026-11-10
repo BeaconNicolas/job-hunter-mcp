@@ -130,11 +130,13 @@ Without a key, the tools still search Remotive (remote jobs) and say that Adzuna
    e.g. `beacon_jobhunter_bot`. BotFather replies with a **token** like `123456789:AA…`.
    Treat it like a password.
 3. Open your new bot (BotFather's message links to it), tap **Start** and send it "hi".
-4. Find your **chat ID**: in a browser, open
-   `https://api.telegram.org/bot<TOKEN>/getUpdates` (put your token in place of `<TOKEN>`).
-   In the text that appears, find `"chat":{"id":` followed by a number, e.g. `"id":123456789`.
-   That number is your chat ID. If the page shows `"result":[]`, send the bot another message
-   and refresh.
+4. Save the token as the GitHub secret `TELEGRAM_BOT_TOKEN` (step 5's table), then run
+   **Actions → Find my Telegram chat ID → Run workflow**. Your bot replies in Telegram with
+   your **chat ID**; save it as the secret `TELEGRAM_CHAT_ID`. (The ID is never printed in the
+   public logs.) On a laptop you can instead run `uv run job-hunter-telegram-id` with
+   `TELEGRAM_BOT_TOKEN` set.
+
+   Avoid third-party "user info" bots for this: some copycats ask you to join channels first.
 
 Only you can talk to your bot, and Telegram costs nothing, with no 24-hour rule.
 

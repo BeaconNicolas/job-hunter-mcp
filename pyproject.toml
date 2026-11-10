@@ -15,6 +15,7 @@ dependencies = [
 job-hunter-mcp = "job_hunter.server:main"
 job-hunter-alert = "job_hunter.alert:main"
 job-hunter-render = "job_hunter.render:cli"
+job-hunter-telegram-id = "job_hunter.telegram:chat_id_cli"
 
 [dependency-groups]
 dev = [

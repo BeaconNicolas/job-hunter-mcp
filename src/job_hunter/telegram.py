@@ -74,3 +74,53 @@ def send_text(client: httpx.Client, cfg: TelegramConfig, text: str, *, html: boo
     description = str(data.get("description") or "no description")
     hint = _hint(status, description)
     raise TelegramError(f"Telegram error {status}: {description}." + (f" {hint}" if hint else ""))
+
+
+# ----------------------------------------------------------------- one-time setup
+def send_chat_id_to_user(client: httpx.Client, token: str) -> None:
+    """Find the latest private chat with the bot and reply there with its chat ID.
+
+    The ID is only sent inside Telegram, never printed, because Actions logs of a
+    public repository are public."""
+    try:
+        response = client.get(API.format(token=token, method="getUpdates"), params={"limit": 100})
+        data = response.json()
+    except (httpx.HTTPError, ValueError):
+        raise TelegramError("Could not reach Telegram or read its reply.") from None
+    if not data.get("ok"):
+        status = int(data.get("error_code") or response.status_code)
+        description = str(data.get("description") or "no description")
+        hint = _hint(status, description)
+        raise TelegramError(f"Telegram error {status}: {description}." + (f" {hint}" if hint else ""))
+    chats = [
+        update["message"]["chat"]
+        for update in data.get("result", [])
+        if update.get("message", {}).get("chat", {}).get("type") == "private"
+    ]
+    if not chats:
+        raise TelegramError(
+            "Your bot has no messages yet. Open your bot in Telegram, tap Start, send it 'hi', "
+            "then run this again within 24 hours."
+        )
+    chat_id = str(chats[-1]["id"])
+    send_text(
+        client,
+        TelegramConfig(token=token, chat_id=chat_id),
+        f"Your chat ID is {chat_id}\n\nSave it in GitHub as the secret TELEGRAM_CHAT_ID "
+        "(Settings > Secrets and variables > Actions > New repository secret).",
+    )
+
+
+def chat_id_cli() -> None:
+    """job-hunter-telegram-id: your bot sends you your chat ID in Telegram."""
+    token = env("TELEGRAM_BOT_TOKEN")
+    if not token:
+        print("Set TELEGRAM_BOT_TOKEN first (the token from @BotFather).")
+        raise SystemExit(1)
+    try:
+        with httpx.Client(timeout=30) as client:
+            send_chat_id_to_user(client, token)
+    except TelegramError as exc:
+        print(exc)
+        raise SystemExit(1) from None
+    print("Done: your bot has sent you your chat ID in Telegram.")
