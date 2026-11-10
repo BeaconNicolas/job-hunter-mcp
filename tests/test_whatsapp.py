@@ -28,7 +28,7 @@ def test_send_template():
         message_id = send(client, CFG, template_payload(CFG, ["2", "line one\nline two"]))
     assert message_id == "wamid.TEST"
     sent = body(calls[0])
-    assert calls[0].url.path == "/v23.0/123/messages"
+    assert calls[0].url.path == "/v25.0/123/messages"
     assert calls[0].headers["Authorization"] == "Bearer t"
     assert sent["template"]["name"] == "job_alert"
     assert sent["template"]["components"][0]["parameters"][1]["text"] == "line one | line two"

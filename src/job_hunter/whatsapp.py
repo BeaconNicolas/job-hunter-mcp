@@ -45,7 +45,7 @@ class WhatsAppConfig:
     to: str
     template: str | None = None
     template_language: str = "en"
-    api_version: str = "v23.0"
+    api_version: str = "v25.0"
 
     @classmethod
     def from_env(cls) -> WhatsAppConfig | None:
@@ -58,7 +58,7 @@ class WhatsAppConfig:
             to=re.sub(r"[^\d]", "", to),
             template=env("WHATSAPP_TEMPLATE"),
             template_language=env("WHATSAPP_TEMPLATE_LANG") or "en",
-            api_version=env("WHATSAPP_API_VERSION") or "v23.0",
+            api_version=env("WHATSAPP_API_VERSION") or "v25.0",
         )
 
 
